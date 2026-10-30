@@ -68,6 +68,87 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string serialPrueba = string.Empty;
 
+    partial void OnSerialPruebaChanged(string value) => ActualizarPreviewSpecs();
+
+    // Vista previa de MODELS_SERIALNUMBERSPECS con el mismo serial
+    public IReadOnlyList<SerialSpecPlantilla> Plantillas => SerialSpecPlantillas.Todas;
+
+    [ObservableProperty]
+    private SerialSpecPlantilla? plantillaSeleccionada;
+
+    partial void OnPlantillaSeleccionadaChanged(SerialSpecPlantilla? value) => ActualizarPreviewSpecs();
+
+    [ObservableProperty]
+    private string modelIdTexto = string.Empty;
+
+    partial void OnModelIdTextoChanged(string value) => ActualizarPreviewSpecs();
+
+    public ObservableCollection<SpecPreviewFila> PreviewSpecs { get; } = new();
+
+    [ObservableProperty]
+    private string? previewSpecsMensaje = "Elige la plantilla del cliente.";
+
+    public bool TienePreviewSpecsMensaje => !string.IsNullOrEmpty(PreviewSpecsMensaje);
+
+    partial void OnPreviewSpecsMensajeChanged(string? value) => OnPropertyChanged(nameof(TienePreviewSpecsMensaje));
+
+    public bool TienePreviewSpecs => PreviewSpecs.Count > 0;
+
+    [ObservableProperty]
+    private string sqlSpecs = string.Empty;
+
+    public bool TieneSqlSpecs => !string.IsNullOrEmpty(SqlSpecs);
+
+    partial void OnSqlSpecsChanged(string value) => OnPropertyChanged(nameof(TieneSqlSpecs));
+
+    // Recalcula la tabla y el INSERT con lo que haya capturado
+    private void ActualizarPreviewSpecs()
+    {
+        PreviewSpecs.Clear();
+        SqlSpecs = string.Empty;
+
+        try
+        {
+            if (PlantillaSeleccionada is null)
+            {
+                PreviewSpecsMensaje = "Elige la plantilla del cliente.";
+                return;
+            }
+
+            var serial = SerialPrueba.Trim();
+            if (string.IsNullOrEmpty(serial))
+            {
+                PreviewSpecsMensaje = "Escribe el serial en \"Probar un serial\" o sácalo del PDF.";
+                return;
+            }
+
+            var (filas, error) = PlantillaSeleccionada.Previsualizar(serial);
+            if (error is not null)
+            {
+                PreviewSpecsMensaje = error;
+                return;
+            }
+
+            foreach (var fila in filas)
+            {
+                PreviewSpecs.Add(fila);
+            }
+
+            if (!int.TryParse(ModelIdTexto.Trim(), out var modelId) || modelId <= 0)
+            {
+                PreviewSpecsMensaje = "Captura el MODELID (el ID del modelo en MODELS_MASTER) para armar el INSERT.";
+                return;
+            }
+
+            SqlSpecs = PlantillaSeleccionada.GenerarSql(serial, modelId);
+            PreviewSpecsMensaje = null;
+        }
+        finally
+        {
+            OnPropertyChanged(nameof(TienePreviewSpecs));
+        }
+    }
+
     [ObservableProperty]
     private bool isProbandoSerial;
 

@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.19.0
+- Nueva "Vista previa de MODELS_SERIALNUMBERSPECS" en Configurar modelo: con el serial de "Probar un serial", la plantilla del cliente (Tesla o GM) y el MODELID, muestra cada segmento (descripción, posición, longitud, dinámico y valor) y arma el INSERT para copiarlo.
+- Tesla corta el serial por posiciones fijas; GM lo parte con la misma expresión regular que se usa en Oracle.
+
 ## 1.18.0
 - Se quitó todo lo relacionado a Oracle (Productivo y Pruebas): Alejandría ya no se conecta a la base de iMES, solo lleva el seguimiento.
 - Se quitó el apartado "DataBase" del menú y la tarjeta "Entorno de iMES (Oracle)" de Ajustes.

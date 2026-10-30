@@ -323,6 +323,117 @@
                             </Border>
                         </StackPanel>
                     </Border>
+
+                    <!-- Vista previa de MODELS_SERIALNUMBERSPECS -->
+                    <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Vista previa de MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="Usa el serial de &quot;Probar un serial&quot;. Elige la plantilla del cliente y el MODELID para ver cómo queda cada segmento y copiar el INSERT."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <TextBlock Text="Plantilla" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <ComboBox
+                                        x:Name="PlantillaSpecsCombo"
+                                        ItemsSource="{x:Bind ViewModel.Plantillas}"
+                                        DisplayMemberPath="Nombre"
+                                        PlaceholderText="Tesla, GM..."
+                                        HorizontalAlignment="Stretch"
+                                        SelectionChanged="PlantillaSpecsCombo_SelectionChanged" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="MODELID" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBox
+                                        FontFamily="Consolas"
+                                        PlaceholderText="ID en MODELS_MASTER"
+                                        Text="{x:Bind ViewModel.ModelIdTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <InfoBar
+                                Severity="Informational"
+                                Message="{x:Bind ViewModel.PreviewSpecsMensaje, Mode=OneWay}"
+                                IsOpen="{x:Bind ViewModel.TienePreviewSpecsMensaje, Mode=OneWay}"
+                                IsClosable="False" />
+
+                            <Border
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                Visibility="{x:Bind ViewModel.TienePreviewSpecs, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel>
+                                    <Grid ColumnSpacing="12" Padding="12,10" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="VALUEDESCRIPTION" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1" Text="STARTPOSITION" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="2" Text="EXPECTEDLEN" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="3" Text="ISDYNAMIC" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Grid.Column="4" Text="FIXEDCHARACTERVALUE" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewSpecs}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <ItemsStackPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:SpecPreviewFila">
+                                                <Grid ColumnSpacing="12" Padding="12,8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="180" />
+                                                        <ColumnDefinition Width="110" />
+                                                        <ColumnDefinition Width="110" />
+                                                        <ColumnDefinition Width="100" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{x:Bind ValueDescription}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind StartTexto}" FontFamily="Consolas" />
+                                                    <TextBlock Grid.Column="2" Text="{x:Bind LenTexto}" FontFamily="Consolas" />
+                                                    <TextBlock Grid.Column="3" Text="{x:Bind DinamicoTexto}" FontFamily="Consolas" />
+                                                    <TextBlock Grid.Column="4" Text="{x:Bind ValorTexto}" FontFamily="Consolas" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.TieneSqlSpecs, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="INSERT" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="1" Content="Copiar SQL" Style="{ThemeResource AccentButtonStyle}" Click="CopiarSqlSpecsButton_Click" />
+                                </Grid>
+                                <TextBox
+                                    Text="{x:Bind ViewModel.SqlSpecs, Mode=OneWay}"
+                                    IsReadOnly="True"
+                                    AcceptsReturn="True"
+                                    TextWrapping="NoWrap"
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    MaxHeight="280"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 

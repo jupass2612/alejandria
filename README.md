@@ -37,6 +37,9 @@ usar desde varias computadoras a la vez.
      iMES — si lo reconoce, ya sé que MODELS_SERIALNUMBERSPECS y su
      Packing están bien. Quién dio de alta cada tabla se marca aparte,
      en su selector.
+   - **Vista previa de MODELS_SERIALNUMBERSPECS**: con el mismo serial,
+     eligiendo la plantilla del cliente (Tesla o GM) y el MODELID, muestra
+     cómo queda cada segmento y arma el INSERT listo para copiar.
 
 4. En cuanto **todas las áreas de un modelo** quedan Terminadas (y ya
    tiene su PDF adjunto — sin eso no cuenta como Terminado, aunque todo

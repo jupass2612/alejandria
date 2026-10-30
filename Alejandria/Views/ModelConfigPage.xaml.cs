@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace Alejandria.Views;
 
@@ -370,5 +371,25 @@ public sealed partial class ModelConfigPage : Page
 
         await dialog.ShowAsync();
         return seleccionado;
+    }
+
+    private void PlantillaSpecsCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ViewModel.PlantillaSeleccionada = PlantillaSpecsCombo.SelectedItem as SerialSpecPlantilla;
+    }
+
+    private void CopiarSqlSpecsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(ViewModel.SqlSpecs))
+        {
+            return;
+        }
+
+        var paquete = new DataPackage();
+        paquete.SetText(ViewModel.SqlSpecs);
+        Clipboard.SetContent(paquete);
+
+        ViewModel.SuccessMessage = "INSERT de MODELS_SERIALNUMBERSPECS copiado. Revísalo antes de correrlo en iMES.";
+        SuccessInfoBar.IsOpen = true;
     }
 }
