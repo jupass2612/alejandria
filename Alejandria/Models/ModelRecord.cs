@@ -23,12 +23,6 @@ public class ModelRecord
     // Nombre del PDF guardado en la carpeta "Documentos". Vacío si no hay nada.
     public string DocumentoAdjunto { get; set; } = string.Empty;
 
-    // El modelo padre (IMES.MODELS_PARENTS) es del modelo completo, no de
-    // un área en particular — una vez elegido/creado desde cualquier área
-    // (SMT/BE/TLA), se recuerda aquí para no volver a buscarlo.
-    public int? OracleParentId { get; set; }
-    public string OracleParentNombre { get; set; } = string.Empty;
-
     public bool TieneDocumentoAdjunto => !string.IsNullOrWhiteSpace(DocumentoAdjunto);
 
     // Nombre del archivo sin el prefijo interno (Id + fecha).

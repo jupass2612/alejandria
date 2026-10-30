@@ -36,9 +36,6 @@ public sealed partial class SettingsPage : Page
         _settings.Load();
         VersionInstaladaText.Text = $"Versión instalada: {UpdateService.VersionActualTexto(_settings.UpdatesFolder)}";
 
-        EntornoImesOracleCombo.ItemsSource = _settings.ImesOracleEntornos.Keys.ToList();
-        EntornoImesOracleCombo.SelectedItem = _settings.ImesOracleEntornoActivo;
-
         // A partir de aquí, los eventos SelectionChanged/Toggled ya reflejan
         // cambios reales del usuario, no la carga inicial.
         _isLoadingInitialState = false;
@@ -219,56 +216,5 @@ public sealed partial class SettingsPage : Page
         ActualizacionInfoBar.Severity = severidad;
         ActualizacionInfoBar.Message = mensaje;
         ActualizacionInfoBar.IsOpen = true;
-    }
-
-    private void EntornoImesOracleCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isLoadingInitialState || EntornoImesOracleCombo.SelectedItem is not string entorno)
-        {
-            return;
-        }
-
-        _settings.GuardarEntornoImesOracleActivo(entorno);
-        ConexionOracleInfoBar.IsOpen = false;
-    }
-
-    private async void ProbarConexionOracleButton_Click(object sender, RoutedEventArgs e)
-    {
-        var entorno = _settings.ImesOracleEntornoSeleccionado;
-        if (entorno is null)
-        {
-            ConexionOracleInfoBar.Severity = InfoBarSeverity.Warning;
-            ConexionOracleInfoBar.Message = "No hay un entorno seleccionado.";
-            ConexionOracleInfoBar.IsOpen = true;
-            return;
-        }
-
-        ProbarConexionOracleButton.IsEnabled = false;
-        ProbarConexionOracleRing.IsActive = true;
-        ConexionOracleInfoBar.IsOpen = false;
-
-        var connectionService = new ImesOracleConnectionService(entorno);
-        var (exito, error) = await connectionService.ProbarConexionAsync();
-
-        if (!exito)
-        {
-            ConexionOracleInfoBar.Severity = InfoBarSeverity.Error;
-            ConexionOracleInfoBar.Message = $"No se pudo conectar ({_settings.ImesOracleEntornoActivo}): {error}";
-            ConexionOracleInfoBar.IsOpen = true;
-            ProbarConexionOracleButton.IsEnabled = true;
-            ProbarConexionOracleRing.IsActive = false;
-            return;
-        }
-
-        var (esquemaOk, errorEsquema, parents, master, serialSpecs) = await connectionService.ProbarEsquemaAsync();
-
-        ConexionOracleInfoBar.Severity = esquemaOk ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
-        ConexionOracleInfoBar.Message = esquemaOk
-            ? $"Conexión exitosa ({_settings.ImesOracleEntornoActivo}). MODELS_PARENTS: {parents}, MODELS_MASTER: {master}, MODELS_SERIALNUMBERSPECS: {serialSpecs} filas."
-            : $"La conexión funcionó, pero no se pudieron contar las tablas: {errorEsquema}";
-        ConexionOracleInfoBar.IsOpen = true;
-
-        ProbarConexionOracleButton.IsEnabled = true;
-        ProbarConexionOracleRing.IsActive = false;
     }
 }

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Alejandria.Models;
 
 namespace Alejandria.Services;
 
@@ -8,9 +7,6 @@ namespace Alejandria.Services;
 public class AppSettingsService
 {
     private readonly string _configPath;
-
-    // Entorno que ya no existe (se quitó en 1.17.0)
-    private const string EntornoDocker = "Docker";
 
     // Ruta de red de la base compartida
     public string DatabasePath { get; private set; } = string.Empty;
@@ -26,13 +22,6 @@ public class AppSettingsService
     // lo que genera "vpk pack" — ver Installer/LEEME-VELOPACK.md).
     // Vacío = "Buscar actualización" avisa que no está configurado.
     public string UpdatesFolder { get; private set; } = string.Empty;
-
-    // Entornos de Oracle de iMES: Productivo y Pruebas
-    public string ImesOracleEntornoActivo { get; private set; } = "Pruebas";
-    public Dictionary<string, ImesOracleEnvironment> ImesOracleEntornos { get; private set; } = new();
-
-    public ImesOracleEnvironment? ImesOracleEntornoSeleccionado =>
-        ImesOracleEntornos.TryGetValue(ImesOracleEntornoActivo, out var entorno) ? entorno : null;
 
     public AppSettingsService()
     {
@@ -84,55 +73,9 @@ public class AppSettingsService
             faltaAlgo = true;
         }
 
-        if (document.RootElement.TryGetProperty("ImesOracle", out var imesOracle))
+        // Config vieja con datos de Oracle, se limpia
+        if (document.RootElement.TryGetProperty("ImesOracle", out _))
         {
-            ImesOracleEntornoActivo = imesOracle.TryGetProperty("EntornoActivo", out var activo)
-                ? activo.GetString() ?? "Pruebas"
-                : "Pruebas";
-
-            ImesOracleEntornos = new Dictionary<string, ImesOracleEnvironment>();
-            if (imesOracle.TryGetProperty("Entornos", out var entornos))
-            {
-                foreach (var entorno in entornos.EnumerateObject())
-                {
-                    // Docker ya no se usa, se descarta
-                    if (string.Equals(entorno.Name, EntornoDocker, StringComparison.OrdinalIgnoreCase))
-                    {
-                        faltaAlgo = true;
-                        continue;
-                    }
-
-                    ImesOracleEntornos[entorno.Name] = new ImesOracleEnvironment
-                    {
-                        Host = entorno.Value.TryGetProperty("Host", out var host) ? host.GetString() ?? string.Empty : string.Empty,
-                        Puerto = entorno.Value.TryGetProperty("Puerto", out var puerto) ? puerto.GetInt32() : 1521,
-                        ServicioOSid = entorno.Value.TryGetProperty("ServicioOSid", out var servicio) ? servicio.GetString() ?? string.Empty : string.Empty,
-                        Usuario = entorno.Value.TryGetProperty("Usuario", out var usuario) ? usuario.GetString() ?? string.Empty : string.Empty,
-                        Password = entorno.Value.TryGetProperty("Password", out var password) ? password.GetString() ?? string.Empty : string.Empty
-                    };
-                }
-            }
-
-            // Si estaba en Docker se pasa a Pruebas
-            if (!ImesOracleEntornos.ContainsKey(ImesOracleEntornoActivo))
-            {
-                ImesOracleEntornoActivo = "Pruebas";
-                faltaAlgo = true;
-            }
-
-            foreach (var (nombre, entorno) in CrearEntornosPorDefecto())
-            {
-                if (ImesOracleEntornos.TryAdd(nombre, entorno))
-                {
-                    faltaAlgo = true;
-                }
-            }
-        }
-        else
-        {
-            // Config vieja sin entornos de Oracle, van en blanco para llenarse a mano
-            ImesOracleEntornoActivo = "Pruebas";
-            ImesOracleEntornos = CrearEntornosPorDefecto();
             faltaAlgo = true;
         }
 
@@ -150,19 +93,6 @@ public class AppSettingsService
         }
     }
 
-    // Cambia el entorno activo desde Ajustes y lo guarda
-    public void GuardarEntornoImesOracleActivo(string entorno)
-    {
-        ImesOracleEntornoActivo = entorno;
-        GuardarConfigActual();
-    }
-
-    private static Dictionary<string, ImesOracleEnvironment> CrearEntornosPorDefecto() => new()
-    {
-        ["Productivo"] = new ImesOracleEnvironment(),
-        ["Pruebas"] = new ImesOracleEnvironment()
-    };
-
     private void GuardarConfigActual()
     {
         try
@@ -178,11 +108,6 @@ public class AppSettingsService
                 Updates = new
                 {
                     Folder = UpdatesFolder
-                },
-                ImesOracle = new
-                {
-                    EntornoActivo = ImesOracleEntornoActivo,
-                    Entornos = ImesOracleEntornos
                 }
             };
 
@@ -212,11 +137,6 @@ public class AppSettingsService
             Updates = new
             {
                 Folder = @"\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones"
-            },
-            ImesOracle = new
-            {
-                EntornoActivo = "Pruebas",
-                Entornos = CrearEntornosPorDefecto()
             }
         };
 

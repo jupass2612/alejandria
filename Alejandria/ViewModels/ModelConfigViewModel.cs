@@ -83,9 +83,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
     public bool TieneResultadoSerial => !string.IsNullOrEmpty(ResultadoSerialMensaje);
 
-    // El payload completo que regresó iMES — ya no se usa para marcar
-    // nada a mano (eso ahora lo determina el asistente de Oracle, paso
-    // por paso), solo para revisar qué contestó el endpoint.
+    // El payload completo que regresó iMES, para revisar qué contestó
     public ObservableCollection<ImesCampoPayload> PayloadSerial { get; } = new();
 
     partial void OnResultadoSerialMensajeChanged(string? value)
@@ -93,13 +91,9 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(TieneResultadoSerial));
     }
 
-    // Si el último serial se reconoció en iMES: define el color del mensaje
-    // y si se muestra el combo de "quién hizo esta configuración".
+    // Si el último serial se reconoció en iMES (color del mensaje y payload)
     [ObservableProperty]
     private bool resultadoSerialEncontrado;
-
-    // Para el combo "¿Quién hizo esta configuración?".
-    public IReadOnlyList<string> Responsables { get; } = ConfigStatusHelper.Responsables;
 
     [ObservableProperty]
     private string? errorMessage;
@@ -488,7 +482,7 @@ public partial class ModelConfigViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(serial))
         {
             ResultadoSerialEncontrado = false;
-            ResultadoSerialMensaje = "Captura un serial de ejemplo en el Paso 3 primero.";
+            ResultadoSerialMensaje = "Escribe un serial o sácalo del PDF primero.";
             return;
         }
 
@@ -531,9 +525,37 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Si iMES reconoció el serial, ya se sabe que MODELS_PARENTS,
-    // MODELS_MASTER, MODELS_SERIALNUMBERSPECS y su Packing están bien —
-    // esto los marca los 4 con el nombre del responsable de un jalón.
+    // Saca del PDF adjunto los candidatos a serial de ejemplo
+    public List<SerialCandidato> ExtraerCandidatosSerialDelPdf()
+    {
+        ErrorMessage = null;
+
+        if (!Modelo.TieneDocumentoAdjunto)
+        {
+            ErrorMessage = "Este modelo no tiene un PDF adjunto todavía (usa \"Adjuntar PDF\" en Altas de Modelos).";
+            return new List<SerialCandidato>();
+        }
+
+        try
+        {
+            var rutaPdf = DocumentAttachmentService.ObtenerRutaCompleta(_settings.DatabasePath, Modelo.DocumentoAdjunto);
+            var candidatos = PdfSerialExtractorService.ExtraerCandidatosSerial(rutaPdf);
+
+            if (candidatos.Count == 0)
+            {
+                ErrorMessage = "No se encontró un \"Laser Serial Number real example\" en el PDF adjunto, escríbelo a mano.";
+            }
+
+            return candidatos;
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError("ModelConfigViewModel.ExtraerCandidatosSerialDelPdf", ex);
+            ErrorMessage = $"No se pudo leer el PDF adjunto: {LogService.Redactar(ex.Message)}";
+            return new List<SerialCandidato>();
+        }
+    }
+
     public async Task<bool> SaveAsync()
     {
         if (_database is null)

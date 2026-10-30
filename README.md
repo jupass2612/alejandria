@@ -35,8 +35,8 @@ usar desde varias computadoras a la vez.
    - **"Probar un serial"**: capturo un serial real (o lo extraigo del
      PDF adjunto con un clic) y me dice a qué modelo pertenece según
      iMES — si lo reconoce, ya sé que MODELS_SERIALNUMBERSPECS y su
-     Packing están bien, y puedo marcarlos de un jalón eligiendo quién
-     hizo esa parte.
+     Packing están bien. Quién dio de alta cada tabla se marca aparte,
+     en su selector.
 
 4. En cuanto **todas las áreas de un modelo** quedan Terminadas (y ya
    tiene su PDF adjunto — sin eso no cuenta como Terminado, aunque todo

@@ -160,47 +160,6 @@
 
                 </StackPanel>
             </Border>
-
-            <!-- Entorno de iMES (Oracle) — en construcción: base para que
-                 Alejandría configure directamente en iMES más adelante. -->
-            <Border
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="{StaticResource CardCornerRadius}"
-                Padding="24">
-                <StackPanel Spacing="16">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Entorno de iMES (Oracle) — en construcción" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <TextBlock
-                            Text="Elige el entorno (Productivo/Pruebas) y prueba que la conexión funcione. Para configurar modelos o revisar lo ya registrado, ve al apartado &quot;DataBase&quot; del menú."
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-
-                    <Grid ColumnSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Spacing="2">
-                            <TextBlock Text="Entorno activo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        </StackPanel>
-                        <ComboBox x:Name="EntornoImesOracleCombo" Grid.Column="1" MinWidth="160" SelectionChanged="EntornoImesOracleCombo_SelectionChanged" />
-                    </Grid>
-
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button x:Name="ProbarConexionOracleButton" Content="Probar conexión" Click="ProbarConexionOracleButton_Click" />
-                        <ProgressRing x:Name="ProbarConexionOracleRing" Width="18" Height="18" IsActive="False" />
-                    </StackPanel>
-
-                    <InfoBar
-                        x:Name="ConexionOracleInfoBar"
-                        IsOpen="False"
-                        IsClosable="False" />
-                </StackPanel>
-            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

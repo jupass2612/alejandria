@@ -25,31 +25,6 @@ public sealed partial class ModelConfigPage : Page
     {
         InitializeComponent();
         _autoguardadoTimer.Tick += AutoguardadoTimer_Tick;
-
-        // El asistente de Oracle escribe el seguimiento local directo a
-        // la base de datos (no al Detalle que ya está en memoria aquí) —
-        // sin esto, las pastillas de arriba se quedan mostrando el
-        // estatus viejo aunque el asistente ya diga "completado".
-        OracleWizard.SeguimientoLocalActualizado += OracleWizard_SeguimientoLocalActualizado;
-    }
-
-    private async void OracleWizard_SeguimientoLocalActualizado(object? sender, EventArgs e)
-    {
-        // El estatus de la pastilla de arriba ya no depende de volver a
-        // leer SQLite — se calcula directo de los 3 pasos del asistente,
-        // que es la fuente de verdad real.
-        EstatusBdImesBadge.Status = OracleWizard.TodosLosPasosCompletos
-            ? ConfigStatusHelper.Terminado
-            : OracleWizard.AlgunPasoCompletado
-                ? ConfigStatusHelper.EnProceso
-                : ConfigStatusHelper.Pendiente;
-
-        // El seguimiento local (SQLite) sigue actualizándose para que
-        // Histórico/Estadísticas/reportes sigan funcionando — se vuelve a
-        // leer aquí para resincronizar los demás campos de la pantalla,
-        // sin tocar el asistente, para no reiniciarlo a medio uso.
-        await ViewModel.CargarAreaAsync(ViewModel.AreaSeleccionada);
-        PopulateFieldsFromDetalleSinReiniciarWizard();
     }
 
     private void ReiniciarAutoguardado()
@@ -150,31 +125,10 @@ public sealed partial class ModelConfigPage : Page
         _isPopulatingFields = true;
         var detalle = ViewModel.Detalle;
 
-        PartLineCombo.SelectedItem = NullIfEmpty(detalle.PartLineBomMaintenance);
-
-        WorkOrderBox.Text = detalle.WorkOrder;
-        RutaBox.Text = detalle.Ruta;
-        FlujoBox.Text = detalle.Flujo;
-        LineaBox.Text = detalle.Linea;
-
-        EstadoDocumentoCombo.SelectedItem = NullIfEmpty(detalle.EstadoDocumento) ?? ConfigStatusHelper.DocumentoCorrecto;
-        _isPopulatingFields = false;
-
-        // El asistente de Oracle se reinicia cada vez que se (re)carga
-        // el área — así siempre arranca en el Paso 1 para la área
-        // correcta, en vez de arrastrar el estado de la anterior.
-        OracleWizard.InicializarParaModelo(ViewModel.Modelo, ViewModel.AreaSeleccionada);
-    }
-
-    // Igual que PopulateFieldsFromDetalle, pero sin reiniciar el
-    // asistente de Oracle — para cuando el asistente mismo es quien
-    // avisó que algo cambió (reiniciarlo ahí perdería en qué paso
-    // estaba y repetiría consultas a Oracle sin necesidad).
-    private void PopulateFieldsFromDetalleSinReiniciarWizard()
-    {
-        _isPopulatingFields = true;
-        var detalle = ViewModel.Detalle;
-
+        ParentsCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsParents);
+        MasterCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsMaster);
+        SerialSpecsCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsSerialNumberSpecs);
+        SerialSpecsPackingCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsSerialNumberSpecsPacking);
         PartLineCombo.SelectedItem = NullIfEmpty(detalle.PartLineBomMaintenance);
 
         WorkOrderBox.Text = detalle.WorkOrder;
@@ -199,6 +153,10 @@ public sealed partial class ModelConfigPage : Page
 
         switch (combo.Name)
         {
+            case nameof(ParentsCombo): ViewModel.Detalle.ImesModelsParents = value; break;
+            case nameof(MasterCombo): ViewModel.Detalle.ImesModelsMaster = value; break;
+            case nameof(SerialSpecsCombo): ViewModel.Detalle.ImesModelsSerialNumberSpecs = value; break;
+            case nameof(SerialSpecsPackingCombo): ViewModel.Detalle.ImesModelsSerialNumberSpecsPacking = value; break;
             case nameof(PartLineCombo): ViewModel.Detalle.PartLineBomMaintenance = value; break;
             case nameof(EstadoDocumentoCombo): ViewModel.Detalle.EstadoDocumento = value; break;
         }
@@ -348,10 +306,6 @@ public sealed partial class ModelConfigPage : Page
 
     private async void ProbarSerialButton_Click(object sender, RoutedEventArgs e)
     {
-        // Ya no se escribe a mano — siempre se prueba el mismo serial de
-        // ejemplo que se capturó en el Paso 3 de arriba.
-        ViewModel.SerialPrueba = OracleWizard.ViewModel.SerialEjemplo;
-
         await ViewModel.ProbarSerialAsync();
 
         // El Severity no se puede enlazar directo desde un bool sin un
@@ -360,5 +314,61 @@ public sealed partial class ModelConfigPage : Page
         ResultadoSerialInfoBar.Severity = ViewModel.ResultadoSerialEncontrado
             ? InfoBarSeverity.Success
             : InfoBarSeverity.Warning;
+    }
+
+    // Solo llena el campo con el serial del PDF, no lo prueba
+    private async void ExtraerSerialDelPdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        var candidatos = ViewModel.ExtraerCandidatosSerialDelPdf();
+        if (candidatos.Count == 0)
+        {
+            return;
+        }
+
+        var elegido = candidatos.Count == 1
+            ? candidatos[0].Valor
+            : await ElegirSerialDelPdfAsync(candidatos);
+
+        if (elegido is not null)
+        {
+            // Se pone directo en el ViewModel para no depender del foco del TextBox
+            ViewModel.SerialPrueba = elegido;
+        }
+    }
+
+    // Si el PDF trae varios seriales se elige cuál usar
+    private async Task<string?> ElegirSerialDelPdfAsync(List<SerialCandidato> candidatos)
+    {
+        string? seleccionado = null;
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Se encontraron {candidatos.Count} seriales en el PDF adjunto",
+            CloseButtonText = "Cancelar"
+        };
+
+        var lista = new StackPanel { Spacing = 8, MinWidth = 340 };
+        foreach (var candidato in candidatos)
+        {
+            var boton = new Button
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Padding = new Thickness(12, 10, 12, 10),
+                Content = $"{candidato.EtiquetaMostrada}\n{candidato.Valor}"
+            };
+            boton.Click += (_, _) =>
+            {
+                seleccionado = candidato.Valor;
+                dialog.Hide();
+            };
+            lista.Children.Add(boton);
+        }
+
+        dialog.Content = new ScrollViewer { Content = lista, MaxHeight = 400 };
+
+        await dialog.ShowAsync();
+        return seleccionado;
     }
 }

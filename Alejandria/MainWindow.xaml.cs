@@ -274,10 +274,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // Antes había una lista aparte de Tag → página que había que
-        // mantener sincronizada a mano con NavItems (se le olvidó agregar
-        // "DataBase" y se quedaba en Altas de Modelos por default) — ahora
-        // usa el PageType que ya trae cada NavItem, una sola fuente de verdad.
+        // Usa el PageType de cada NavItem, una sola fuente de verdad
         var target = ViewModel.NavItems.FirstOrDefault(item => item.Tag == tag)?.PageType ?? typeof(AltasModelosPage);
 
         if (ContentFrame.CurrentSourcePageType != target)

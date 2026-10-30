@@ -210,33 +210,68 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Configuración Base de Datos — iMES" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <controls:StatusBadge x:Name="EstatusBdImesBadge" Grid.Column="1" Status="Pendiente" VerticalAlignment="Center" />
+                        <controls:StatusBadge Grid.Column="1" Status="{x:Bind ViewModel.EstatusBdImes, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
 
                     <TextBlock
-                        Text="El estatus de arriba se calcula directo de los 3 pasos de abajo — Terminado cuando los 3 estén hechos."
+                        Text="Marca quién dio de alta cada tabla en iMES. Terminado cuando las 4 tengan responsable o No Aplica."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
 
-                    <controls:ConfigurarEnImesControl x:Name="OracleWizard" />
+                    <Grid ColumnSpacing="16" RowSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6">
+                            <TextBlock Text="MODELS_PARENTS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="ParentsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6">
+                            <TextBlock Text="MODELS_MASTER" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="MasterCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+                            <TextBlock Text="MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="SerialSpecsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+                            <TextBlock Text="MODELS_SERIALNUMBERSPECS Packing" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="SerialSpecsPackingCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                        </StackPanel>
+                    </Grid>
 
                     <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Probar un serial" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBlock
-                                Text="Corrobora que MODELS_SERIALNUMBERSPECS esté bien configurado — usa directo el serial de ejemplo que se capturó en el Paso 3 de arriba."
+                                Text="Corrobora en iMES que MODELS_SERIALNUMBERSPECS esté bien configurado. Escribe el serial o sácalo del PDF adjunto."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap" />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Serial a probar:" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                                <TextBlock
-                                    Text="{x:Bind OracleWizard.ViewModel.SerialEjemplo, Mode=OneWay}"
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="SerialPruebaBox"
+                                    Grid.Column="0"
                                     FontFamily="Consolas"
-                                    VerticalAlignment="Center"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </StackPanel>
+                                    PlaceholderText="Serial de ejemplo"
+                                    Text="{x:Bind ViewModel.SerialPrueba, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button
+                                    Grid.Column="1"
+                                    Content="Extraer del PDF"
+                                    Click="ExtraerSerialDelPdfButton_Click"
+                                    ToolTipService.ToolTip="Saca el serial del &quot;Laser Serial Number real example&quot; del PDF adjunto" />
+                            </Grid>
                             <Button
                                 Content="Probar"
                                 Style="{ThemeResource AccentButtonStyle}"

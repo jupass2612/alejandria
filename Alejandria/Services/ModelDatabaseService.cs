@@ -79,12 +79,6 @@ public class ModelDatabaseService
             await EnsureColumnExistsAsync(connection, TableName, "NumeroParteTLA", "TEXT");
             await EnsureColumnExistsAsync(connection, TableName, "DocumentoAdjunto", "TEXT");
 
-            // Campo nuevo: el modelo padre de iMES elegido/creado desde
-            // "Configurar en iMES" — es del modelo completo, no de un área,
-            // así se recuerda una sola vez sin importar desde qué área se hizo.
-            await EnsureColumnExistsAsync(connection, TableName, "OracleParentId", "INTEGER");
-            await EnsureColumnExistsAsync(connection, TableName, "OracleParentNombre", "TEXT");
-
             await EnsureDetalleTableAsync(connection);
 
             // Campo nuevo: "MODELS_SERIALNUMBERSPECS Packing" en iMES y
@@ -256,7 +250,7 @@ public class ModelDatabaseService
         using var connection = await OpenConnectionAsync();
         using var command = connection.CreateCommand();
         command.CommandText = $"""
-            SELECT Id, NumeroModelo, NombreModelo, NumeroParteSMT, NumeroParteBE, NumeroParteTLA, QuienRecibeDocumento, FechaSolicitud, QuienMandoDocumento, DocumentoAdjunto, OracleParentId, OracleParentNombre
+            SELECT Id, NumeroModelo, NombreModelo, NumeroParteSMT, NumeroParteBE, NumeroParteTLA, QuienRecibeDocumento, FechaSolicitud, QuienMandoDocumento, DocumentoAdjunto
             FROM {TableName}
             ORDER BY Id DESC;
             """;
@@ -280,7 +274,7 @@ public class ModelDatabaseService
         using (var command = connection.CreateCommand())
         {
             command.CommandText = $"""
-                SELECT Id, NumeroModelo, NombreModelo, NumeroParteSMT, NumeroParteBE, NumeroParteTLA, QuienRecibeDocumento, FechaSolicitud, QuienMandoDocumento, DocumentoAdjunto, OracleParentId, OracleParentNombre
+                SELECT Id, NumeroModelo, NombreModelo, NumeroParteSMT, NumeroParteBE, NumeroParteTLA, QuienRecibeDocumento, FechaSolicitud, QuienMandoDocumento, DocumentoAdjunto
                 FROM {TableName}
                 ORDER BY Id DESC;
                 """;
@@ -507,21 +501,6 @@ public class ModelDatabaseService
         await command.ExecuteNonQueryAsync();
     }
 
-    // Guarda a qué modelo padre de iMES quedó ligado este modelo — es del
-    // modelo completo (no de un área), se recuerda aquí para no volver a
-    // buscarlo desde otra área.
-    public async Task UpdateOracleParentAsync(int modeloId, int parentId, string parentNombre)
-    {
-        using var connection = await OpenConnectionAsync();
-        using var command = connection.CreateCommand();
-        command.CommandText = $"UPDATE {TableName} SET OracleParentId = $parentId, OracleParentNombre = $parentNombre WHERE Id = $id;";
-        command.Parameters.AddWithValue("$id", modeloId);
-        command.Parameters.AddWithValue("$parentId", parentId);
-        command.Parameters.AddWithValue("$parentNombre", ToDb(parentNombre));
-
-        await command.ExecuteNonQueryAsync();
-    }
-
     private static object ToDb(string? value) => string.IsNullOrEmpty(value) ? DBNull.Value : value;
 
     private static string ReadString(SqliteDataReader reader, int index) => reader.IsDBNull(index) ? string.Empty : reader.GetString(index);
@@ -537,9 +516,7 @@ public class ModelDatabaseService
         QuienRecibeDocumento = ReadString(reader, 6),
         FechaSolicitud = DateTime.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
         QuienMandoDocumento = ReadString(reader, 8),
-        DocumentoAdjunto = ReadString(reader, 9),
-        OracleParentId = reader.IsDBNull(10) ? null : reader.GetInt32(10),
-        OracleParentNombre = ReadString(reader, 11)
+        DocumentoAdjunto = ReadString(reader, 9)
     };
 
     private static DetalleConfiguracion ReadDetalle(SqliteDataReader reader) => new()

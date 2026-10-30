@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.18.0
+- Se quitó todo lo relacionado a Oracle (Productivo y Pruebas): Alejandría ya no se conecta a la base de iMES, solo lleva el seguimiento.
+- Se quitó el apartado "DataBase" del menú y la tarjeta "Entorno de iMES (Oracle)" de Ajustes.
+- En Configurar modelo, el asistente de 3 pasos se cambió por 4 selectores (MODELS_PARENTS, MODELS_MASTER, MODELS_SERIALNUMBERSPECS y su Packing) para marcar quién dio de alta cada uno, o No Aplica.
+- "Probar un serial" vuelve a tener su propio campo, con "Extraer del PDF" a un lado.
+- "Buscar en iMES" y "Probar un serial" siguen igual: usan la API web de iMES, no Oracle.
+
 ## 1.17.0
 - Se quitó el entorno Docker de Oracle. Ahora solo quedan Productivo y Pruebas en Ajustes → Entorno de iMES; si alguna computadora tenía Docker elegido, se cambia sola a Pruebas.
 - Se quitó la carpeta local de pruebas que se usaba con Docker: Alejandría siempre trabaja contra la base compartida en red.
