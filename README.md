@@ -199,15 +199,6 @@ Alejandria/
 └── Styles/                Paleta, tipografía y estilos (ColorsAndBrushes, CardStyles, TitleBarStyles)
 ```
 
-## Alejandría Cliente
-
-Proyecto hermano en `AlejandriaCliente/` — una app aparte para que la gente
-de BCS que llena la solicitud de modelo nuevo lo haga con un formulario
-guiado en vez de una tabla de Word donde cada quien escribe distinto. El
-formulario genera un PDF con formato fijo, para que esta app (Alejandría)
-lo pueda leer sin tener que adivinar cómo está escrito. Ver
-`AlejandriaCliente/README.md` para el detalle.
-
 ## Problemas conocidos
 
 - **Ventana en negro al abrir**: no debería pasar — se quitó Mica/Acrylic

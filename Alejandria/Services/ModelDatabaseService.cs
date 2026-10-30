@@ -26,8 +26,7 @@ public class ModelDatabaseService
 
     public ModelDatabaseService(string databasePath)
     {
-        // La ruta de red ya existe siempre, pero la carpeta de pruebas
-        // local (entorno Docker) puede no existir todavía la primera vez.
+        // Por si la carpeta todavía no existe
         var carpeta = Path.GetDirectoryName(databasePath);
         if (!string.IsNullOrWhiteSpace(carpeta))
         {

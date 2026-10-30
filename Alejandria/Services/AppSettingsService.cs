@@ -9,25 +9,11 @@ public class AppSettingsService
 {
     private readonly string _configPath;
 
-    // Carpeta de pruebas local por defecto — se usa cuando el archivo de
-    // configuración es viejo y no tiene esto capturado todavía.
-    private const string RutaPruebaLocalPorDefecto = @"C:\Users\solisj\OneDrive - BCS AIS\Documentos\Alejandria Prueba\altas_modelos.db";
+    // Entorno que ya no existe (se quitó en 1.17.0)
+    private const string EntornoDocker = "Docker";
 
-    // Ruta real (compartida en red) — la que usan Productivo y Pruebas.
-    public string DatabasePathProductivo { get; private set; } = string.Empty;
-
-    // Carpeta local de pruebas — se usa en vez de la de red cuando el
-    // entorno de Oracle activo es "Docker", para no mezclar datos de
-    // prueba con los reales (base de datos, Documentos, y Respaldos
-    // viven todos junto a esta ruta).
-    public string DatabasePathPruebaLocal { get; private set; } = string.Empty;
-
-    // La ruta que usa el resto de la app — cambia sola según el entorno
-    // de Oracle activo (ver Ajustes → Entorno de iMES).
-    public string DatabasePath =>
-        string.Equals(ImesOracleEntornoActivo, "Docker", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(DatabasePathPruebaLocal)
-            ? DatabasePathPruebaLocal
-            : DatabasePathProductivo;
+    // Ruta de red de la base compartida
+    public string DatabasePath { get; private set; } = string.Empty;
 
     // URL base de la API de iMES. Vacío = "Buscar en iMES" se deshabilita.
     public string ImesApiBaseUrl { get; private set; } = string.Empty;
@@ -41,11 +27,8 @@ public class AppSettingsService
     // Vacío = "Buscar actualización" avisa que no está configurado.
     public string UpdatesFolder { get; private set; } = string.Empty;
 
-    // Los 3 entornos de la base de datos Oracle de iMES (Productivo,
-    // Pruebas, Docker) — para cuando Alejandría escriba la configuración
-    // ahí directamente, en vez de solo llevar el seguimiento de que se
-    // hizo a mano. Ver docker/README.md para el entorno "Docker".
-    public string ImesOracleEntornoActivo { get; private set; } = "Docker";
+    // Entornos de Oracle de iMES: Productivo y Pruebas
+    public string ImesOracleEntornoActivo { get; private set; } = "Pruebas";
     public Dictionary<string, ImesOracleEnvironment> ImesOracleEntornos { get; private set; } = new();
 
     public ImesOracleEnvironment? ImesOracleEntornoSeleccionado =>
@@ -65,20 +48,15 @@ public class AppSettingsService
 
         var json = File.ReadAllText(_configPath);
         using var document = JsonDocument.Parse(json);
-        DatabasePathProductivo = document.RootElement.TryGetProperty("DatabasePath", out var value)
+        DatabasePath = document.RootElement.TryGetProperty("DatabasePath", out var value)
             ? value.GetString() ?? string.Empty
             : string.Empty;
 
         var faltaAlgo = false;
 
-        if (document.RootElement.TryGetProperty("DatabasePathPruebaLocal", out var pruebaLocal))
+        // Config vieja con la carpeta de pruebas local, se limpia
+        if (document.RootElement.TryGetProperty("DatabasePathPruebaLocal", out _))
         {
-            DatabasePathPruebaLocal = pruebaLocal.GetString() ?? string.Empty;
-        }
-        else
-        {
-            // Archivo de antes de que existiera la carpeta de pruebas local.
-            DatabasePathPruebaLocal = RutaPruebaLocalPorDefecto;
             faltaAlgo = true;
         }
 
@@ -109,14 +87,21 @@ public class AppSettingsService
         if (document.RootElement.TryGetProperty("ImesOracle", out var imesOracle))
         {
             ImesOracleEntornoActivo = imesOracle.TryGetProperty("EntornoActivo", out var activo)
-                ? activo.GetString() ?? "Docker"
-                : "Docker";
+                ? activo.GetString() ?? "Pruebas"
+                : "Pruebas";
 
             ImesOracleEntornos = new Dictionary<string, ImesOracleEnvironment>();
             if (imesOracle.TryGetProperty("Entornos", out var entornos))
             {
                 foreach (var entorno in entornos.EnumerateObject())
                 {
+                    // Docker ya no se usa, se descarta
+                    if (string.Equals(entorno.Name, EntornoDocker, StringComparison.OrdinalIgnoreCase))
+                    {
+                        faltaAlgo = true;
+                        continue;
+                    }
+
                     ImesOracleEntornos[entorno.Name] = new ImesOracleEnvironment
                     {
                         Host = entorno.Value.TryGetProperty("Host", out var host) ? host.GetString() ?? string.Empty : string.Empty,
@@ -127,14 +112,26 @@ public class AppSettingsService
                     };
                 }
             }
+
+            // Si estaba en Docker se pasa a Pruebas
+            if (!ImesOracleEntornos.ContainsKey(ImesOracleEntornoActivo))
+            {
+                ImesOracleEntornoActivo = "Pruebas";
+                faltaAlgo = true;
+            }
+
+            foreach (var (nombre, entorno) in CrearEntornosPorDefecto())
+            {
+                if (ImesOracleEntornos.TryAdd(nombre, entorno))
+                {
+                    faltaAlgo = true;
+                }
+            }
         }
         else
         {
-            // Archivo de antes de que existiera la parametrización de
-            // entornos de Oracle — se completa con los 3 entornos vacíos
-            // (Docker con los valores del docker-compose.yml de ejemplo,
-            // Productivo/Pruebas en blanco para que se llenen a mano).
-            ImesOracleEntornoActivo = "Docker";
+            // Config vieja sin entornos de Oracle, van en blanco para llenarse a mano
+            ImesOracleEntornoActivo = "Pruebas";
             ImesOracleEntornos = CrearEntornosPorDefecto();
             faltaAlgo = true;
         }
@@ -146,15 +143,14 @@ public class AppSettingsService
             GuardarConfigActual();
         }
 
-        if (string.IsNullOrWhiteSpace(DatabasePathProductivo))
+        if (string.IsNullOrWhiteSpace(DatabasePath))
         {
             throw new InvalidOperationException(
                 $"'DatabasePath' no está configurado en {_configPath}. Edita ese archivo y apunta a la ruta de red compartida.");
         }
     }
 
-    // Cambia el entorno activo (Productivo/Pruebas/Docker) y lo guarda —
-    // se llama desde el selector en Ajustes.
+    // Cambia el entorno activo desde Ajustes y lo guarda
     public void GuardarEntornoImesOracleActivo(string entorno)
     {
         ImesOracleEntornoActivo = entorno;
@@ -164,15 +160,7 @@ public class AppSettingsService
     private static Dictionary<string, ImesOracleEnvironment> CrearEntornosPorDefecto() => new()
     {
         ["Productivo"] = new ImesOracleEnvironment(),
-        ["Pruebas"] = new ImesOracleEnvironment(),
-        ["Docker"] = new ImesOracleEnvironment
-        {
-            Host = "localhost",
-            Puerto = 1521,
-            ServicioOSid = "XEPDB1",
-            Usuario = "IMES",
-            Password = "DevOnly_ChangeMe!"
-        }
+        ["Pruebas"] = new ImesOracleEnvironment()
     };
 
     private void GuardarConfigActual()
@@ -181,8 +169,7 @@ public class AppSettingsService
         {
             var actualizado = new
             {
-                DatabasePath = DatabasePathProductivo,
-                DatabasePathPruebaLocal,
+                DatabasePath,
                 ImesApi = new
                 {
                     BaseUrl = ImesApiBaseUrl,
@@ -217,10 +204,6 @@ public class AppSettingsService
             // Ruta de red compartida donde vive la base de datos de Altas de
             // Modelos. Debe ser IDÉNTICA en cada computadora.
             DatabasePath = @"\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\DB\altas_modelos.db",
-
-            // Carpeta local de pruebas — se usa en vez de la de red cuando el
-            // entorno de Oracle activo es "Docker" (ver Ajustes).
-            DatabasePathPruebaLocal = RutaPruebaLocalPorDefecto,
             ImesApi = new
             {
                 BaseUrl = "https://sqromx-imesweb.ad.one-bcs.com/imes-api/",
@@ -232,7 +215,7 @@ public class AppSettingsService
             },
             ImesOracle = new
             {
-                EntornoActivo = "Docker",
+                EntornoActivo = "Pruebas",
                 Entornos = CrearEntornosPorDefecto()
             }
         };

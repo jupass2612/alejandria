@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.17.0
+- Se quitó el entorno Docker de Oracle. Ahora solo quedan Productivo y Pruebas en Ajustes → Entorno de iMES; si alguna computadora tenía Docker elegido, se cambia sola a Pruebas.
+- Se quitó la carpeta local de pruebas que se usaba con Docker: Alejandría siempre trabaja contra la base compartida en red.
+- Se quitó el proyecto Alejandría Cliente de la solución.
+
 ## 1.16.5
 - Corregido: al "Extraer del PDF" en el Paso 3, el campo del serial se veía lleno pero "Empezar" no hacía nada hasta darle clic al campo primero. Causa: el enlace de ese campo solo sincroniza el valor real hasta que pierde el foco, no de inmediato cuando se llena por código (como hace la extracción). Ahora se actualiza directo desde el código en cuanto se extrae, sin depender de que alguien le dé clic al campo.
 
