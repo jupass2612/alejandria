@@ -1,0 +1,21 @@
+<ContentDialog
+    x:Class="Alejandria.Views.VerDetallesDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Alejandria.Controls"
+    Title="Ver detalles"
+    CloseButtonText="Cerrar"
+    DefaultButton="Close">
+
+    <ScrollViewer MaxHeight="560">
+        <StackPanel x:Name="ContenidoStack" Spacing="20" MinWidth="440" MaxWidth="520">
+            <TextBlock
+                x:Name="SubtituloText"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap" />
+            <!-- Las tarjetas por área se agregan aquí en código, una por
+                 cada área que tenga el modelo. Todo de solo lectura. -->
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

@@ -1,0 +1,84 @@
+<Page
+    x:Class="Alejandria.Views.ImesParentsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Alejandria.Models"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <Grid Padding="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <Button Content="&lt; Regresar" Click="RegresarButton_Click" HorizontalAlignment="Left" Margin="0,0,0,8" />
+            <TextBlock Text="MODELS_PARENTS (solo lectura)" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBlock
+                Text="Lo que ya hay registrado en esta tabla — para dar de alta algo nuevo, usa &quot;Configurar un modelo en iMES&quot;. Muestra hasta 500 filas."
+                Style="{ThemeResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap" />
+            <InfoBar Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" IsClosable="False" Margin="0,8,0,0" />
+            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="20" Height="20" HorizontalAlignment="Left" Margin="0,8,0,0" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <StackPanel MinWidth="800">
+                <Grid ColumnSpacing="8" Padding="8,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="70" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="ID" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="1" Text="PARENTMODELNAME" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="2" Text="PARTNUMBER" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="3" Text="FAMILY" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="4" Text="VALIDATEFLOW" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="5" Text="VALIDATELASTOP" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="6" Text="FLOWFWDVAL" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="7" Text="ACTIVO" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                </Grid>
+                <ListView
+                    ItemsSource="{x:Bind ViewModel.Parents}"
+                    SelectionMode="None"
+                    ScrollViewer.HorizontalScrollMode="Disabled"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ImesParentModel">
+                            <Grid ColumnSpacing="8" Padding="8,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="70" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{x:Bind Id}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind ParentModelName}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind PartNumber}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="3" Text="{x:Bind Family}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="4" Text="{x:Bind ValidateFlow}" />
+                                <TextBlock Grid.Column="5" Text="{x:Bind ValidateLastOpResult}" />
+                                <TextBlock Grid.Column="6" Text="{x:Bind FlowFwdValidation}" />
+                                <TextBlock Grid.Column="7" Text="{x:Bind IsActive}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

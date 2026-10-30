@@ -1,0 +1,116 @@
+<Window
+    x:Class="Alejandria.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Alejandria.Models">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ===================== Custom top app bar ===================== -->
+        <Grid
+            x:Name="AppTitleBar"
+            Grid.Row="0"
+            Background="Transparent"
+            Padding="16,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- App icon + title -->
+            <StackPanel
+                Grid.Column="0"
+                Orientation="Horizontal"
+                Spacing="10"
+                VerticalAlignment="Center">
+                <Image x:Name="AppLogoImage" Width="18" Height="18" />
+                <TextBlock
+                    Text="{x:Bind ViewModel.AppTitle}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Settings -->
+            <StackPanel
+                Grid.Column="2"
+                Orientation="Horizontal"
+                Spacing="4"
+                Margin="0,0,12,0"
+                VerticalAlignment="Center">
+                <Button
+                    x:Name="SettingsButton"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CornerRadius="8"
+                    Click="SettingsButton_Click"
+                    ToolTipService.ToolTip="Settings">
+                    <FontIcon Glyph="&#xE713;" FontSize="16" />
+                </Button>
+            </StackPanel>
+
+            <!-- Custom window caption buttons (replace the native min/max/close) -->
+            <StackPanel
+                x:Name="CaptionButtonsPanel"
+                Grid.Column="3"
+                Orientation="Horizontal"
+                VerticalAlignment="Stretch">
+                <Button
+                    x:Name="MinimizeButton"
+                    Style="{StaticResource TitleBarCaptionButtonStyle}"
+                    Click="MinimizeButton_Click"
+                    ToolTipService.ToolTip="Minimize">
+                    <FontIcon Glyph="&#xE921;" FontSize="10" />
+                </Button>
+                <Button
+                    x:Name="MaximizeButton"
+                    Style="{StaticResource TitleBarCaptionButtonStyle}"
+                    Click="MaximizeButton_Click"
+                    ToolTipService.ToolTip="Maximize">
+                    <FontIcon x:Name="MaximizeIcon" Glyph="&#xE922;" FontSize="10" />
+                </Button>
+                <Button
+                    x:Name="CloseButton"
+                    Style="{StaticResource TitleBarCloseButtonStyle}"
+                    Click="CloseButton_Click"
+                    ToolTipService.ToolTip="Close">
+                    <FontIcon Glyph="&#xE8BB;" FontSize="10" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ===================== Nav + content ===================== -->
+        <NavigationView
+            x:Name="RootNavigationView"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            OpenPaneLength="220"
+            CompactModeThresholdWidth="640"
+            ExpandedModeThresholdWidth="1007"
+            MenuItemsSource="{x:Bind ViewModel.NavItems}"
+            SelectionChanged="RootNavigationView_SelectionChanged"
+            Background="Transparent">
+
+            <NavigationView.MenuItemTemplate>
+                <DataTemplate x:DataType="models:NavItem">
+                    <NavigationViewItem Content="{x:Bind Label}" Tag="{x:Bind Tag}">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="{x:Bind Icon}" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </DataTemplate>
+            </NavigationView.MenuItemTemplate>
+
+            <Frame x:Name="ContentFrame" />
+        </NavigationView>
+    </Grid>
+</Window>

@@ -1,0 +1,39 @@
+<Page
+    x:Class="Alejandria.Views.ConfigurarEnImesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Alejandria.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <Grid Padding="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,20">
+            <Button Content="&lt; Regresar" Click="RegresarButton_Click" HorizontalAlignment="Left" Margin="0,0,0,8" />
+            <TextBlock Text="Configurar en iMES" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBlock
+                x:Name="ModeloAreaText"
+                Style="{ThemeResource BodyStrongTextBlockStyle}"
+                Visibility="Collapsed" />
+            <TextBlock
+                Text="Da de alta directo en las tablas de iMES — busca primero si ya hay algo parecido antes de crear desde cero. Entorno activo (se cambia en Ajustes):"
+                Style="{ThemeResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap" />
+            <TextBlock x:Name="EntornoActivoText" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                <controls:ConfigurarEnImesControl x:Name="Wizard" />
+                <StackPanel Height="20" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

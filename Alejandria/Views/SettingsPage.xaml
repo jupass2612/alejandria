@@ -1,0 +1,206 @@
+<Page
+    x:Class="Alejandria.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <ScrollViewer Padding="32" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <StackPanel Spacing="24" MaxWidth="700">
+            <TextBlock Text="Ajustes" Style="{ThemeResource TitleTextBlockStyle}" />
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource CardCornerRadius}"
+                Padding="24">
+                <StackPanel Spacing="20">
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Tema de la aplicación" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="Elige cómo se ve la app. &quot;Usar configuración del sistema&quot; sigue a Windows."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ComboBox
+                            x:Name="ThemeCombo"
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            MinWidth="200"
+                            SelectionChanged="ThemeCombo_SelectionChanged">
+                            <ComboBoxItem Content="Usar configuración del sistema" Tag="Default" />
+                            <ComboBoxItem Content="Claro" Tag="Light" />
+                            <ComboBoxItem Content="Oscuro" Tag="Dark" />
+                        </ComboBox>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Notificaciones" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="Muestra una confirmación al guardar la configuración de un modelo."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="NotificationsToggle"
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            OnContent=""
+                            OffContent=""
+                            Toggled="NotificationsToggle_Toggled" />
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Buscar en iMES automáticamente" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="Al entrar a un área sin Work Order/Ruta/Línea capturados, los busca solo en iMES — sin tener que darle clic a &quot;Buscar en iMES&quot;. Apágalo si tu conexión es lenta y prefieres decidir cuándo consultar."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="BusquedaImesAutomaticaToggle"
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            OnContent=""
+                            OffContent=""
+                            Toggled="BusquedaImesAutomaticaToggle_Toggled" />
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="12">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Actualizaciones" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock
+                                    x:Name="VersionInstaladaText"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                                <Button
+                                    x:Name="VerNotasVersionButton"
+                                    Content="Ver notas de versión"
+                                    Click="VerNotasVersionButton_Click" />
+                                <Button
+                                    x:Name="BuscarActualizacionButton"
+                                    Content="Buscar actualización"
+                                    Click="BuscarActualizacionButton_Click" />
+                            </StackPanel>
+                        </Grid>
+                        <InfoBar
+                            x:Name="ActualizacionInfoBar"
+                            IsOpen="False"
+                            IsClosable="True" />
+                    </StackPanel>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Registro de errores" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="Guarda en esta computadora los errores que le pasen a la app, por si hace falta revisar qué salió mal. Se conservan los últimos 30 días."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                            <Button
+                                x:Name="VerRegistroErroresButton"
+                                Content="Ver registro"
+                                Click="VerRegistroErroresButton_Click" />
+                            <Button
+                                x:Name="AbrirCarpetaLogsButton"
+                                Content="Abrir carpeta"
+                                Click="AbrirCarpetaLogsButton_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Acerca de" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="Alejandría · Seguimiento de Altas de Modelos"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <!-- Entorno de iMES (Oracle) — en construcción: base para que
+                 Alejandría configure directamente en iMES más adelante. -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource CardCornerRadius}"
+                Padding="24">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Entorno de iMES (Oracle) — en construcción" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="Elige el entorno (Productivo/Pruebas/Docker) y prueba que la conexión funcione. Para configurar modelos o revisar lo ya registrado, ve al apartado &quot;DataBase&quot; del menú."
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Entorno activo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                        <ComboBox x:Name="EntornoImesOracleCombo" Grid.Column="1" MinWidth="160" SelectionChanged="EntornoImesOracleCombo_SelectionChanged" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="ProbarConexionOracleButton" Content="Probar conexión" Click="ProbarConexionOracleButton_Click" />
+                        <ProgressRing x:Name="ProbarConexionOracleRing" Width="18" Height="18" IsActive="False" />
+                    </StackPanel>
+
+                    <InfoBar
+                        x:Name="ConexionOracleInfoBar"
+                        IsOpen="False"
+                        IsClosable="False" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

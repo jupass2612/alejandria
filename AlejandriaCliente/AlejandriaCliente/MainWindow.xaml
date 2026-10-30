@@ -1,0 +1,9 @@
+<Window
+    x:Class="AlejandriaCliente.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{ThemeResource AppBackgroundBrush}">
+        <Frame x:Name="ContentFrame" />
+    </Grid>
+</Window>

@@ -1,0 +1,18 @@
+# Build
+bin/
+obj/
+*.user
+*.suo
+
+# IDEs
+.vs/
+.idea/
+
+# Velopack
+Installer/Releases/
+Installer/publish/
+
+# Datos locales
+*.db
+*.db-shm
+*.db-wal

@@ -1,0 +1,236 @@
+<Page
+    x:Class="AlejandriaCliente.Views.CambioDeModeloPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:AlejandriaCliente.Models">
+
+    <Grid Background="{ThemeResource AppBackgroundBrush}">
+        <ScrollViewer Padding="32" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel MaxWidth="820" HorizontalAlignment="Left" Spacing="20">
+
+                <StackPanel Spacing="4">
+                    <Button Content="&lt; Regresar" Click="RegresarButton_Click" HorizontalAlignment="Left" Margin="0,0,0,8" />
+                    <TextBlock Text="Cambio de modelo" Style="{ThemeResource TitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="Cambió el número de parte u otro dato del modelo — captura el valor Actual y el Nuevo en cada campo."
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <InfoBar x:Name="ResultadoInfoBar" IsOpen="False" IsClosable="True" />
+
+                <!-- 1. Información General -->
+                <Border x:Name="Seccion1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="1. General Information" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <Grid ColumnSpacing="16" RowSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Request Date" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <DatePicker x:Name="FechaSolicitudPicker" HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Expected by" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <DatePicker x:Name="FechaEsperadaPicker" HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Requestor Name" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="NombreSolicitanteBox" PlaceholderText="Ej. Daniel Treviño" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Requestor Email" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="CorreoSolicitanteBox" PlaceholderText="Ej. daniel.trevino@bcs-ais.com" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. Model Information (Actual / Nuevo) -->
+                <Border x:Name="Seccion2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="2. Model Information" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <Grid ColumnSpacing="16" RowSpacing="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Actual" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Nuevo" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </Grid>
+
+                        <Grid ColumnSpacing="16" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Model Name" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="ModelNameActualBox" />
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="ModelNameNuevoBox" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Model SAP Part Number" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="SapPartNumberActualBox" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="SapPartNumberNuevoBox" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="BCS Part Number" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="BcsPartNumberActualBox" />
+                            <TextBox Grid.Row="2" Grid.Column="2" x:Name="BcsPartNumberNuevoBox" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Client Part Number" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="ClientPartNumberActualBox" />
+                            <TextBox Grid.Row="3" Grid.Column="2" x:Name="ClientPartNumberNuevoBox" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Laser Serial Number real example" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="4" Grid.Column="1" x:Name="LaserSerialActualBox" />
+                            <TextBox Grid.Row="4" Grid.Column="2" x:Name="LaserSerialNuevoBox" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3. PCB / SAP Information (Actual / Nuevo) -->
+                <Border x:Name="Seccion3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="3. PCB / SAP Information" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <Grid ColumnSpacing="16" RowSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PCBs per Panel" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" x:Name="PcbsPerPanelActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Column="2" x:Name="PcbsPerPanelNuevoBox" PlaceholderText="Nuevo" />
+                        </Grid>
+
+                        <ListView x:Name="AreasPcbSapListView" SelectionMode="None" IsItemClickEnabled="False">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:PcbSapAreaCambio">
+                                    <StackPanel Margin="0,6,0,6" Spacing="6">
+                                        <TextBlock Text="{x:Bind Area}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <Grid ColumnSpacing="8" RowSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="SAP Part Number Report" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBox Grid.Row="0" Grid.Column="1" PlaceholderText="Actual" Text="{x:Bind SapPartNumberReportActual, Mode=TwoWay}" />
+                                            <TextBox Grid.Row="0" Grid.Column="2" PlaceholderText="Nuevo" Text="{x:Bind SapPartNumberReportNuevo, Mode=TwoWay}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="SAP Report Side" VerticalAlignment="Center" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="Actual" Text="{x:Bind SapReportSideActual, Mode=TwoWay}" IsEnabled="{x:Bind TieneReportSide}" />
+                                            <TextBox Grid.Row="1" Grid.Column="2" PlaceholderText="Nuevo" Text="{x:Bind SapReportSideNuevo, Mode=TwoWay}" IsEnabled="{x:Bind TieneReportSide}" />
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="SAP Report Point" VerticalAlignment="Center" />
+                                            <TextBox Grid.Row="2" Grid.Column="1" PlaceholderText="Actual" Text="{x:Bind SapReportPointActual, Mode=TwoWay}" />
+                                            <TextBox Grid.Row="2" Grid.Column="2" PlaceholderText="Nuevo" Text="{x:Bind SapReportPointNuevo, Mode=TwoWay}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <!-- 4. Packout Setup Data (Actual usado / Nuevo a agregar) -->
+                <Border x:Name="Seccion4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="4. Packout Setup Data" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <Grid ColumnSpacing="16" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Finish Good or PCB Packout?" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="PackoutTipoActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="PackoutTipoNuevoBox" PlaceholderText="Nuevo" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Validate flow before Pack?" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="ValidarFlujoActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="ValidarFlujoNuevoBox" PlaceholderText="Nuevo" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Last operation before Packout" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="UltimaOperacionActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="2" Grid.Column="2" x:Name="UltimaOperacionNuevoBox" PlaceholderText="Nuevo" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="New Packout Station?" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="NuevaEstacionActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="3" Grid.Column="2" x:Name="NuevaEstacionNuevoBox" PlaceholderText="Nuevo" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Box Label QR code" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="4" Grid.Column="1" x:Name="BoxLabelActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="4" Grid.Column="2" x:Name="BoxLabelNuevoBox" PlaceholderText="Nuevo" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Product Label QR code" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBox Grid.Row="5" Grid.Column="1" x:Name="ProductLabelActualBox" PlaceholderText="Actual" />
+                            <TextBox Grid.Row="5" Grid.Column="2" x:Name="ProductLabelNuevoBox" PlaceholderText="Nuevo" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 5. Aprobaciones -->
+                <Border x:Name="Seccion5" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="5. Approvals" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <ListView x:Name="AprobacionesListView" SelectionMode="None" IsItemClickEnabled="False">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:AprobacionEntry">
+                                    <Grid ColumnSpacing="16" Margin="0,4,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="240" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind Rol}" VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1" PlaceholderText="Nombre" Text="{x:Bind Nombre, Mode=TwoWay}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="AtrasButton" Grid.Column="0" Content="&lt; Atrás" Click="AtrasButton_Click" />
+                    <TextBlock x:Name="PasoActualText" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button x:Name="SiguienteButton" Grid.Column="2" Content="Siguiente &gt;" Style="{ThemeResource AccentButtonStyle}" Click="SiguienteButton_Click" />
+                </Grid>
+
+                <StackPanel Height="20" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

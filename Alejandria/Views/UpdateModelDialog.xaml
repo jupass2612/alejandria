@@ -1,0 +1,74 @@
+<ContentDialog
+    x:Class="Alejandria.Views.UpdateModelDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Actualizar modelo"
+    PrimaryButtonText="Crear actualización"
+    CloseButtonText="Cancelar"
+    DefaultButton="Primary"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+
+    <ScrollViewer MaxHeight="520">
+    <StackPanel Spacing="12" MinWidth="380" MaxWidth="440">
+        <InfoBar
+            x:Name="ValidationInfoBar"
+            Severity="Error"
+            Title="Faltan datos"
+            Message="Marca al menos un área como cambiada y captura su nuevo número de parte; el nombre y quién recibe el documento también son obligatorios."
+            IsOpen="False"
+            IsClosable="False" />
+
+        <TextBlock
+            x:Name="ModeloOrigenText"
+            Style="{ThemeResource CaptionTextBlockStyle}"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            TextWrapping="Wrap" />
+
+        <TextBox x:Name="NombreModeloBox" Header="Nombre del nuevo modelo" />
+
+        <StackPanel Spacing="10">
+            <TextBlock
+                Text="¿Qué área cambió de número de parte?"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <StackPanel x:Name="SmtRow" Spacing="4">
+                <CheckBox x:Name="SmtCambioCheck" Content="SMT cambió de número de parte" Checked="AreaCambioCheck_Changed" Unchecked="AreaCambioCheck_Changed" />
+                <TextBox x:Name="SmtNuevoBox" Header="Nuevo número de parte (SMT)" IsEnabled="False" />
+            </StackPanel>
+
+            <StackPanel x:Name="BeRow" Spacing="4">
+                <CheckBox x:Name="BeCambioCheck" Content="BE cambió de número de parte" Checked="AreaCambioCheck_Changed" Unchecked="AreaCambioCheck_Changed" />
+                <TextBox x:Name="BeNuevoBox" Header="Nuevo número de parte (BE)" IsEnabled="False" />
+            </StackPanel>
+
+            <StackPanel x:Name="TlaRow" Spacing="4">
+                <CheckBox x:Name="TlaCambioCheck" Content="TLA cambió de número de parte" Checked="AreaCambioCheck_Changed" Unchecked="AreaCambioCheck_Changed" />
+                <TextBox x:Name="TlaNuevoBox" Header="Nuevo número de parte (TLA)" IsEnabled="False" />
+            </StackPanel>
+
+            <TextBlock
+                Text="Las áreas que NO marques conservan su número de parte y su configuración ya hecha (BD/Plataforma) tal cual — se copian al modelo nuevo. La(s) que sí marques empieza(n) sin configurar."
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ComboBox
+            x:Name="QuienRecibeBox"
+            Header="Quién recibe el documento"
+            PlaceholderText="Selecciona una persona"
+            HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="Reynaldo Barrera" />
+            <ComboBoxItem Content="Juan Pablo Solis" />
+            <ComboBoxItem Content="Cecilia Saldivar" />
+            <ComboBoxItem Content="Roberto Uriel Martinez" />
+        </ComboBox>
+        <DatePicker x:Name="FechaSolicitudPicker" Header="Fecha de solicitud" />
+        <TextBox x:Name="QuienMandaBox" Header="Quién mandó el documento" PlaceholderText="Nombre de quien envía" />
+    </StackPanel>
+    </ScrollViewer>
+</ContentDialog>
