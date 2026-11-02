@@ -193,11 +193,101 @@
                 IsClosable="True" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="5" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer x:Name="PasosScroll" Grid.Row="5" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20" HorizontalAlignment="Stretch">
 
-            <!-- Config. Base de Datos - iMES -->
+            <!-- Pasos -->
             <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource CardCornerRadius}"
+                Padding="8">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        x:Name="Paso1Button"
+                        Grid.Column="0"
+                        Tag="1"
+                        Click="PasoButton_Click"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="12,10,12,0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Paso 1" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="MODELS_PARENTS" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <controls:StatusBadge Status="{x:Bind ViewModel.EstatusPaso1, Mode=OneWay}" HorizontalAlignment="Left" />
+                            <Border Height="3" Margin="0,4,0,0" CornerRadius="2" Background="{ThemeResource AppAccentBrush}" Visibility="{x:Bind ViewModel.EsPaso1, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="Paso2Button"
+                        Grid.Column="1"
+                        Tag="2"
+                        Click="PasoButton_Click"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="12,10,12,0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Paso 2" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="MODELS_MASTER" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <controls:StatusBadge Status="{x:Bind ViewModel.EstatusPaso2, Mode=OneWay}" HorizontalAlignment="Left" />
+                            <Border Height="3" Margin="0,4,0,0" CornerRadius="2" Background="{ThemeResource AppAccentBrush}" Visibility="{x:Bind ViewModel.EsPaso2, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="Paso3Button"
+                        Grid.Column="2"
+                        Tag="3"
+                        Click="PasoButton_Click"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="12,10,12,0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Paso 3" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <controls:StatusBadge Status="{x:Bind ViewModel.EstatusPaso3, Mode=OneWay}" HorizontalAlignment="Left" />
+                            <Border Height="3" Margin="0,4,0,0" CornerRadius="2" Background="{ThemeResource AppAccentBrush}" Visibility="{x:Bind ViewModel.EsPaso3, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="Paso4Button"
+                        Grid.Column="3"
+                        Tag="4"
+                        Click="PasoButton_Click"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="12,10,12,0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Paso 4" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Plataforma iMES" Style="{ThemeResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <controls:StatusBadge Status="{x:Bind ViewModel.EstatusPaso4, Mode=OneWay}" HorizontalAlignment="Left" />
+                            <Border Height="3" Margin="0,4,0,0" CornerRadius="2" Background="{ThemeResource AppAccentBrush}" Visibility="{x:Bind ViewModel.EsPaso4, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Paso 1 · MODELS_PARENTS -->
+            <Border
+                Visibility="{x:Bind ViewModel.EsPaso1, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
@@ -209,39 +299,88 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Configuración Base de Datos — iMES" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <controls:StatusBadge Grid.Column="1" Status="{x:Bind ViewModel.EstatusBdImes, Mode=OneWay}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="0" Text="Paso 1 · MODELS_PARENTS" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <controls:StatusBadge Grid.Column="1" Status="{x:Bind ViewModel.EstatusPaso1, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
 
                     <TextBlock
-                        Text="Marca quién dio de alta cada tabla en iMES. Terminado cuando las 4 tengan responsable o No Aplica."
+                        Text="Da de alta el modelo padre en iMES y marca quién lo hizo, o No Aplica si ya existía."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
 
-                    <Grid ColumnSpacing="16" RowSpacing="16">
+                    <StackPanel Spacing="6" MaxWidth="360" HorizontalAlignment="Left">
+                        <TextBlock Text="¿Quién lo dio de alta?" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="ParentsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Paso 2 · MODELS_MASTER -->
+            <Border
+                Visibility="{x:Bind ViewModel.EsPaso2, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource CardCornerRadius}"
+                Padding="24">
+                <StackPanel Spacing="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Paso 2 · MODELS_MASTER" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <controls:StatusBadge Grid.Column="1" Status="{x:Bind ViewModel.EstatusPaso2, Mode=OneWay}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock
+                        Text="Da de alta el número de parte en MODELS_MASTER ligado a su padre y marca quién lo hizo."
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="6" MaxWidth="360" HorizontalAlignment="Left">
+                        <TextBlock Text="¿Quién lo dio de alta?" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="MasterCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Paso 3 · MODELS_SERIALNUMBERSPECS -->
+            <Border
+                Visibility="{x:Bind ViewModel.EsPaso3, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource CardCornerRadius}"
+                Padding="24">
+                <StackPanel Spacing="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Paso 3 · MODELS_SERIALNUMBERSPECS" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <controls:StatusBadge Grid.Column="1" Status="{x:Bind ViewModel.EstatusPaso3, Mode=OneWay}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock
+                        Text="Arma los segmentos del serial con la vista previa, da de alta el INSERT en iMES y pruébalo con un serial real."
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+
+                    <Grid ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6">
-                            <TextBlock Text="MODELS_PARENTS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <ComboBox x:Name="ParentsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
-                        </StackPanel>
-                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6">
-                            <TextBlock Text="MODELS_MASTER" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <ComboBox x:Name="MasterCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6">
+                        <StackPanel Grid.Column="0" Spacing="6">
                             <TextBlock Text="MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <ComboBox x:Name="SerialSpecsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
                         </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+                        <StackPanel Grid.Column="1" Spacing="6">
                             <TextBlock Text="MODELS_SERIALNUMBERSPECS Packing" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <ComboBox x:Name="SerialSpecsPackingCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
                         </StackPanel>
@@ -437,8 +576,8 @@
                 </StackPanel>
             </Border>
 
-            <!-- Configuracion Plataforma iMES -->
             <Border
+                Visibility="{x:Bind ViewModel.EsPaso4, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
@@ -451,7 +590,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Configuración Plataforma iMES" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="0" Text="Paso 4 · Plataforma iMES" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
                         <Button
                             Grid.Column="1"
                             Style="{StaticResource TableRowActionButtonStyle}"
@@ -464,7 +603,7 @@
                                 <TextBlock Text="Buscar en iMES" />
                             </StackPanel>
                         </Button>
-                        <controls:StatusBadge Grid.Column="2" Status="{x:Bind ViewModel.EstatusPlataformaImes, Mode=OneWay}" VerticalAlignment="Center" />
+                        <controls:StatusBadge Grid.Column="2" Status="{x:Bind ViewModel.EstatusPaso4, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
 
                     <TextBlock
@@ -515,22 +654,45 @@
                 </StackPanel>
             </Border>
 
-            <!-- Guardar -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,0,0,8">
-                <TextBlock
-                    x:Name="AutoguardadoText"
-                    Text="Guardado"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    VerticalAlignment="Center"
-                    Visibility="Collapsed" />
-                <ProgressRing IsActive="{x:Bind ViewModel.IsSaving, Mode=OneWay}" Width="20" Height="20" />
-                <Button
-                    x:Name="SaveButton"
-                    Content="Guardar configuración"
-                    Style="{StaticResource CardPrimaryActionButtonStyle}"
-                    Click="SaveButton_Click" />
-            </StackPanel>
+            <!-- Navegación y guardar -->
+            <Grid ColumnSpacing="12" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <Button Click="AnteriorButton_Click" IsEnabled="{x:Bind ViewModel.PuedeAnterior, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                            <TextBlock Text="Anterior" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Style="{ThemeResource AccentButtonStyle}"
+                        Click="SiguienteButton_Click"
+                        Visibility="{x:Bind ViewModel.PuedeSiguiente, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Siguiente" />
+                            <FontIcon Glyph="&#xE72A;" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <TextBlock
+                        x:Name="AutoguardadoText"
+                        Text="Guardado"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed" />
+                    <ProgressRing IsActive="{x:Bind ViewModel.IsSaving, Mode=OneWay}" Width="20" Height="20" />
+                    <Button
+                        x:Name="SaveButton"
+                        Content="Guardar configuración"
+                        Style="{StaticResource CardPrimaryActionButtonStyle}"
+                        Click="SaveButton_Click" />
+                </StackPanel>
+            </Grid>
 
         </StackPanel>
         </ScrollViewer>

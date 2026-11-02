@@ -189,8 +189,56 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(HasError));
     }
 
+    // Configurar modelo va por pasos: 1 Parents, 2 Master, 3 SerialSpecs, 4 Plataforma
+    public const int TotalPasos = 4;
+
     [ObservableProperty]
-    private string estatusBdImes = ConfigStatusHelper.Pendiente;
+    private int pasoActual = 1;
+
+    public bool EsPaso1 => PasoActual == 1;
+    public bool EsPaso2 => PasoActual == 2;
+    public bool EsPaso3 => PasoActual == 3;
+    public bool EsPaso4 => PasoActual == 4;
+    public bool PuedeAnterior => PasoActual > 1;
+    public bool PuedeSiguiente => PasoActual < TotalPasos;
+
+    partial void OnPasoActualChanged(int value)
+    {
+        OnPropertyChanged(nameof(EsPaso1));
+        OnPropertyChanged(nameof(EsPaso2));
+        OnPropertyChanged(nameof(EsPaso3));
+        OnPropertyChanged(nameof(EsPaso4));
+        OnPropertyChanged(nameof(PuedeAnterior));
+        OnPropertyChanged(nameof(PuedeSiguiente));
+    }
+
+    public void IrAPaso(int paso) => PasoActual = Math.Clamp(paso, 1, TotalPasos);
+
+    [ObservableProperty]
+    private string estatusPaso1 = ConfigStatusHelper.Pendiente;
+
+    [ObservableProperty]
+    private string estatusPaso2 = ConfigStatusHelper.Pendiente;
+
+    [ObservableProperty]
+    private string estatusPaso3 = ConfigStatusHelper.Pendiente;
+
+    [ObservableProperty]
+    private string estatusPaso4 = ConfigStatusHelper.Pendiente;
+
+    // Estatus de un solo campo: responsable o No Aplica = Terminado
+    private static string EstatusDeCampo(string? valor) =>
+        ConfigStatusHelper.IsCompleted(valor) ? ConfigStatusHelper.Terminado
+        : valor == ConfigStatusHelper.EnProceso ? ConfigStatusHelper.EnProceso
+        : ConfigStatusHelper.Pendiente;
+
+    // Primer paso que falta, para abrir directo ahí
+    private int PrimerPasoPendiente()
+    {
+        var estatus = new[] { EstatusPaso1, EstatusPaso2, EstatusPaso3, EstatusPaso4 };
+        var indice = Array.FindIndex(estatus, e => e != ConfigStatusHelper.Terminado);
+        return indice < 0 ? 1 : indice + 1;
+    }
 
     [ObservableProperty]
     private string estatusBdConsolidado = ConfigStatusHelper.Pendiente;
@@ -322,6 +370,7 @@ public partial class ModelConfigViewModel : ObservableObject
             PermiteCapturaManualPlataforma = false;
 
             RecomputeStatuses();
+            PasoActual = PrimerPasoPendiente();
             await RefreshDerivedDataAsync();
         }
         catch (Exception ex)
@@ -391,10 +440,16 @@ public partial class ModelConfigViewModel : ObservableObject
     {
         var resumen = ConfigStatusHelper.ComputeResumen(Modelo, Detalle);
 
-        EstatusBdImes = ConfigStatusHelper.Aggregate(Detalle.ImesModelsParents, Detalle.ImesModelsMaster, Detalle.ImesModelsSerialNumberSpecs, Detalle.ImesModelsSerialNumberSpecsPacking);
         EstatusBdConsolidado = resumen.EstatusBd;
         EstatusPlataformaImes = resumen.EstatusPlataforma;
         EstatusGeneral = resumen.EstatusGeneral;
+
+        EstatusPaso1 = EstatusDeCampo(Detalle.ImesModelsParents);
+        EstatusPaso2 = EstatusDeCampo(Detalle.ImesModelsMaster);
+        EstatusPaso3 = ConfigStatusHelper.Combine(
+            EstatusDeCampo(Detalle.ImesModelsSerialNumberSpecs),
+            EstatusDeCampo(Detalle.ImesModelsSerialNumberSpecsPacking));
+        EstatusPaso4 = resumen.EstatusPlataforma;
 
         FechaLimite = resumen.FechaLimite;
         DiasRetraso = resumen.DiasRetraso;

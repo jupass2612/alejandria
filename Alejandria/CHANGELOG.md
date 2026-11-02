@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.20.0
+- Configurar modelo ahora va por pasos, uno a la vez: 1 MODELS_PARENTS, 2 MODELS_MASTER, 3 MODELS_SERIALNUMBERSPECS (con Packing, Probar un serial y la vista previa) y 4 Plataforma iMES.
+- Arriba se ven los 4 pasos con su estatus; se puede saltar a cualquiera con un clic o avanzar con Anterior/Siguiente.
+- Al abrir un modelo o cambiar de área, arranca en el primer paso que falte.
+
 ## 1.19.0
 - Nueva "Vista previa de MODELS_SERIALNUMBERSPECS" en Configurar modelo: con el serial de "Probar un serial", la plantilla del cliente (Tesla o GM) y el MODELID, muestra cada segmento (descripción, posición, longitud, dinámico y valor) y arma el INSERT para copiarlo.
 - Tesla corta el serial por posiciones fijas; GM lo parte con la misma expresión regular que se usa en Oracle.

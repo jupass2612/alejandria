@@ -392,4 +392,23 @@ public sealed partial class ModelConfigPage : Page
         ViewModel.SuccessMessage = "INSERT de MODELS_SERIALNUMBERSPECS copiado. Revísalo antes de correrlo en iMES.";
         SuccessInfoBar.IsOpen = true;
     }
+
+    private void PasoButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tag } && int.TryParse(tag, out var paso))
+        {
+            IrAPaso(paso);
+        }
+    }
+
+    private void AnteriorButton_Click(object sender, RoutedEventArgs e) => IrAPaso(ViewModel.PasoActual - 1);
+
+    private void SiguienteButton_Click(object sender, RoutedEventArgs e) => IrAPaso(ViewModel.PasoActual + 1);
+
+    // Cambia de paso y regresa arriba para que se vea desde el inicio
+    private void IrAPaso(int paso)
+    {
+        ViewModel.IrAPaso(paso);
+        PasosScroll.ChangeView(null, 0, null);
+    }
 }
