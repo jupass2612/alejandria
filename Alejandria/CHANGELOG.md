@@ -1,5 +1,8 @@
 # Historial de cambios
 
+## 1.20.1
+- Paso 3 reacomodado en el orden de trabajo: primero se captura el serial de ejemplo, la plantilla y el MODELID; luego se ve la tabla de cómo debe quedar MODELS_SERIALNUMBERSPECS y el INSERT; después "Probar en iMES"; y al final quién lo dio de alta (SerialSpecs y Packing).
+
 ## 1.20.0
 - Configurar modelo ahora va por pasos, uno a la vez: 1 MODELS_PARENTS, 2 MODELS_MASTER, 3 MODELS_SERIALNUMBERSPECS (con Packing, Probar un serial y la vista previa) y 4 Plataforma iMES.
 - Arriba se ven los 4 pasos con su estatus; se puede saltar a cualquiera con un clic o avanzar con Anterior/Siguiente.

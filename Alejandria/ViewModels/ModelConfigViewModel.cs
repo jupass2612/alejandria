@@ -86,7 +86,7 @@ public partial class ModelConfigViewModel : ObservableObject
     public ObservableCollection<SpecPreviewFila> PreviewSpecs { get; } = new();
 
     [ObservableProperty]
-    private string? previewSpecsMensaje = "Elige la plantilla del cliente.";
+    private string? previewSpecsMensaje = "Escribe el serial de ejemplo o sácalo del PDF.";
 
     public bool TienePreviewSpecsMensaje => !string.IsNullOrEmpty(PreviewSpecsMensaje);
 
@@ -109,16 +109,17 @@ public partial class ModelConfigViewModel : ObservableObject
 
         try
         {
-            if (PlantillaSeleccionada is null)
-            {
-                PreviewSpecsMensaje = "Elige la plantilla del cliente.";
-                return;
-            }
-
+            // Se piden en orden: serial, plantilla y MODELID
             var serial = SerialPrueba.Trim();
             if (string.IsNullOrEmpty(serial))
             {
-                PreviewSpecsMensaje = "Escribe el serial en \"Probar un serial\" o sácalo del PDF.";
+                PreviewSpecsMensaje = "Escribe el serial de ejemplo o sácalo del PDF.";
+                return;
+            }
+
+            if (PlantillaSeleccionada is null)
+            {
+                PreviewSpecsMensaje = "Elige la plantilla del cliente.";
                 return;
             }
 
@@ -618,7 +619,7 @@ public partial class ModelConfigViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(serial))
         {
             ResultadoSerialEncontrado = false;
-            ResultadoSerialMensaje = "Escribe un serial o sácalo del PDF primero.";
+            ResultadoSerialMensaje = "Escribe el serial de ejemplo arriba primero.";
             return;
         }
 
