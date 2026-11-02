@@ -26,6 +26,17 @@ public partial class AltasModelosViewModel : ObservableObject
     partial void OnErrorMessageChanged(string? value)
     {
         OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(MostrarEstadoVacio));
+    }
+
+    // Cargando, o sin altas todavía
+    public bool MostrarEstadoVacio => IsLoading || (!HasError && Records.Count == 0);
+
+    partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(MostrarEstadoVacio));
+
+    public AltasModelosViewModel()
+    {
+        Records.CollectionChanged += (_, _) => OnPropertyChanged(nameof(MostrarEstadoVacio));
     }
 
     public async Task InitializeAsync()

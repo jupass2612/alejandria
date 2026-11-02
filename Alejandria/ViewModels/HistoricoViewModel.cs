@@ -22,12 +22,28 @@ public partial class HistoricoViewModel : ObservableObject
     partial void OnFiltroTextoChanged(string value)
     {
         AplicarFiltro();
+        OnPropertyChanged(nameof(TituloVacio));
         OnPropertyChanged(nameof(MensajeVacio));
+        OnPropertyChanged(nameof(MostrarEstadoVacio));
     }
 
+    public string TituloVacio => string.IsNullOrWhiteSpace(FiltroTexto)
+        ? "Todavía no hay modelos en Histórico"
+        : "Ningún modelo coincide";
+
     public string MensajeVacio => string.IsNullOrWhiteSpace(FiltroTexto)
-        ? "Todavía no hay modelos en Histórico. Aparecen aquí automáticamente cuando su Estatus General llega a Terminado."
-        : $"Ningún modelo en Histórico coincide con \"{FiltroTexto.Trim()}\".";
+        ? "Aparecen aquí solos cuando todas sus áreas llegan a Terminado."
+        : $"Nada en Histórico coincide con \"{FiltroTexto.Trim()}\".";
+
+    // Cargando, o la lista quedó vacía
+    public bool MostrarEstadoVacio => IsLoading || (!HasError && Modelos.Count == 0);
+
+    partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(MostrarEstadoVacio));
+
+    public HistoricoViewModel()
+    {
+        Modelos.CollectionChanged += (_, _) => OnPropertyChanged(nameof(MostrarEstadoVacio));
+    }
 
     [ObservableProperty]
     private bool isLoading;
@@ -40,6 +56,7 @@ public partial class HistoricoViewModel : ObservableObject
     partial void OnErrorMessageChanged(string? value)
     {
         OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(MostrarEstadoVacio));
     }
 
     public async Task InitializeAsync()
@@ -158,7 +175,8 @@ public partial class HistoricoViewModel : ObservableObject
                     Flujo = detalleOriginal.Flujo,
                     Ruta = detalleOriginal.Ruta,
                     Linea = detalleOriginal.Linea,
-                    PartLineBomMaintenance = detalleOriginal.PartLineBomMaintenance
+                    PartLineBomMaintenance = detalleOriginal.PartLineBomMaintenance,
+                    ImesModelId = detalleOriginal.ImesModelId
                 });
             }
 

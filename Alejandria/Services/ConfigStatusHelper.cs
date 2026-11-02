@@ -220,4 +220,38 @@ public static class ConfigStatusHelper
 
         return new ModeloResumen(estatusBdConsolidado, estatusPlataformaConsolidado, estatusGeneralConsolidado, fechaLimite, diasRetraso);
     }
+
+    // Estatus de un solo campo: responsable o No Aplica = Terminado
+    public static string EstatusDeCampo(string? valor) =>
+        IsCompleted(valor) ? Terminado
+        : valor == EnProceso ? EnProceso
+        : Pendiente;
+
+    // Estatus de los 4 pasos de Configurar para un área
+    public static string[] EstatusPasos(DetalleConfiguracion detalle) => new[]
+    {
+        EstatusDeCampo(detalle.ImesModelsParents),
+        EstatusDeCampo(detalle.ImesModelsMaster),
+        Combine(EstatusDeCampo(detalle.ImesModelsSerialNumberSpecs), EstatusDeCampo(detalle.ImesModelsSerialNumberSpecsPacking)),
+        AggregatePlataforma(detalle)
+    };
+
+    // Lo mismo pero de todo el modelo: un paso está Terminado solo si lo está en todas sus áreas
+    public static string[] EstatusPasosModelo(ModelRecord modelo, IEnumerable<DetalleConfiguracion>? detalles)
+    {
+        var porArea = (detalles ?? Enumerable.Empty<DetalleConfiguracion>()).ToDictionary(d => d.Area, d => d);
+        var areas = modelo.AreasDisponibles;
+        if (areas.Count == 0)
+        {
+            return new[] { Pendiente, Pendiente, Pendiente, Pendiente };
+        }
+
+        var estatusPorArea = areas
+            .Select(a => EstatusPasos(porArea.TryGetValue(a, out var d) ? d : new DetalleConfiguracion { ModeloId = modelo.Id, Area = a }))
+            .ToList();
+
+        return Enumerable.Range(0, 4)
+            .Select(i => Combine(estatusPorArea.Select(e => e[i]).ToArray()))
+            .ToArray();
+    }
 }

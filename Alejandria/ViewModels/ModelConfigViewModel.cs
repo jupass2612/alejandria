@@ -81,7 +81,12 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string modelIdTexto = string.Empty;
 
-    partial void OnModelIdTextoChanged(string value) => ActualizarPreviewSpecs();
+    // Se guarda en el área para que el Paso 3 lo use sin volver a escribirlo
+    partial void OnModelIdTextoChanged(string value)
+    {
+        Detalle.ImesModelId = value?.Trim() ?? string.Empty;
+        ActualizarPreviewSpecs();
+    }
 
     public ObservableCollection<SpecPreviewFila> PreviewSpecs { get; } = new();
 
@@ -227,12 +232,6 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string estatusPaso4 = ConfigStatusHelper.Pendiente;
 
-    // Estatus de un solo campo: responsable o No Aplica = Terminado
-    private static string EstatusDeCampo(string? valor) =>
-        ConfigStatusHelper.IsCompleted(valor) ? ConfigStatusHelper.Terminado
-        : valor == ConfigStatusHelper.EnProceso ? ConfigStatusHelper.EnProceso
-        : ConfigStatusHelper.Pendiente;
-
     // Primer paso que falta, para abrir directo ahí
     private int PrimerPasoPendiente()
     {
@@ -365,6 +364,7 @@ public partial class ModelConfigViewModel : ObservableObject
             var existing = await _database.GetDetalleAsync(Modelo.Id, area);
             Detalle = existing ?? new DetalleConfiguracion { ModeloId = Modelo.Id, Area = area };
             AreaSeleccionada = area;
+            ModelIdTexto = Detalle.ImesModelId;
             PermiteCapturaManualPlataforma = false;
 
             RecomputeStatuses();
@@ -441,12 +441,11 @@ public partial class ModelConfigViewModel : ObservableObject
         EstatusPlataformaImes = resumen.EstatusPlataforma;
         EstatusGeneral = resumen.EstatusGeneral;
 
-        EstatusPaso1 = EstatusDeCampo(Detalle.ImesModelsParents);
-        EstatusPaso2 = EstatusDeCampo(Detalle.ImesModelsMaster);
-        EstatusPaso3 = ConfigStatusHelper.Combine(
-            EstatusDeCampo(Detalle.ImesModelsSerialNumberSpecs),
-            EstatusDeCampo(Detalle.ImesModelsSerialNumberSpecsPacking));
-        EstatusPaso4 = resumen.EstatusPlataforma;
+        var pasos = ConfigStatusHelper.EstatusPasos(Detalle);
+        EstatusPaso1 = pasos[0];
+        EstatusPaso2 = pasos[1];
+        EstatusPaso3 = pasos[2];
+        EstatusPaso4 = pasos[3];
 
         FechaLimite = resumen.FechaLimite;
         DiasRetraso = resumen.DiasRetraso;
@@ -756,9 +755,11 @@ public partial class ModelConfigViewModel : ObservableObject
                 Flujo = EsAreaSmt ? string.Empty : valorRutaOFlujoOrigen,
                 Ruta = EsAreaSmt ? valorRutaOFlujoOrigen : string.Empty,
                 Linea = origen.Linea,
-                PartLineBomMaintenance = origen.PartLineBomMaintenance
+                PartLineBomMaintenance = origen.PartLineBomMaintenance,
+                ImesModelId = origen.ImesModelId
             };
 
+            ModelIdTexto = Detalle.ImesModelId;
             AreaConfigCopiable = null;
             RecomputeStatuses();
             SuccessMessage = $"Se copió la configuración de {areaOrigen}. Revísala y guarda para confirmarla.";

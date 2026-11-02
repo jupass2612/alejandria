@@ -19,6 +19,9 @@ public class UserPreferencesService
     // conexión lenta y prefiera decidir cuándo consultar.
     public bool BusquedaImesAutomatica { get; private set; } = true;
 
+    // En Configurar modelo, pasa solo al siguiente paso cuando se completa uno
+    public bool AvanceAutomaticoPasos { get; private set; } = true;
+
     // Última versión que ya vio el "qué hay de nuevo" al abrir — vacío si
     // nunca se ha registrado (primera instalación real, o la primera vez
     // que corre una versión con este seguimiento). En ambos casos se
@@ -59,6 +62,11 @@ public class UserPreferencesService
                 BusquedaImesAutomatica = busquedaElement.GetBoolean();
             }
 
+            if (document.RootElement.TryGetProperty("AvanceAutomaticoPasos", out var avanceElement))
+            {
+                AvanceAutomaticoPasos = avanceElement.GetBoolean();
+            }
+
             if (document.RootElement.TryGetProperty("LastSeenVersion", out var versionElement))
             {
                 LastSeenVersion = versionElement.GetString() ?? string.Empty;
@@ -72,11 +80,12 @@ public class UserPreferencesService
         }
     }
 
-    public void Save(string theme, bool notificationsEnabled, bool busquedaImesAutomatica)
+    public void Save(string theme, bool notificationsEnabled, bool busquedaImesAutomatica, bool avanceAutomaticoPasos)
     {
         Theme = theme;
         NotificationsEnabled = notificationsEnabled;
         BusquedaImesAutomatica = busquedaImesAutomatica;
+        AvanceAutomaticoPasos = avanceAutomaticoPasos;
         GuardarArchivo();
     }
 
@@ -92,7 +101,7 @@ public class UserPreferencesService
     private void GuardarArchivo()
     {
         var json = JsonSerializer.Serialize(
-            new { Theme, NotificationsEnabled, BusquedaImesAutomatica, LastSeenVersion },
+            new { Theme, NotificationsEnabled, BusquedaImesAutomatica, AvanceAutomaticoPasos, LastSeenVersion },
             new JsonSerializerOptions { WriteIndented = true });
 
         File.WriteAllText(_path, json);

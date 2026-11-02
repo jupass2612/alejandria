@@ -8,6 +8,8 @@ using Alejandria.Views;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Alejandria;
@@ -19,6 +21,8 @@ public sealed partial class MainWindow : Window
     public MainViewModel ViewModel { get; } = new();
 
     private OverlappedPresenter? _presenter;
+
+    private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromSeconds(3) };
 
     public MainWindow()
     {
@@ -33,6 +37,15 @@ public sealed partial class MainWindow : Window
         SetUpCustomTitleBar();
         ApplySavedTheme();
         LoadAppLogo();
+
+        _toastTimer.Tick += (_, _) =>
+        {
+            _toastTimer.Stop();
+            ToastBorder.Visibility = Visibility.Collapsed;
+        };
+        ToastService.Registrar(MostrarToast);
+
+        ContentFrame.Navigated += ContentFrame_Navigated;
 
         // Navegar aquí mismo (antes de Activate()) puede dejar el Frame en
         // blanco, porque la ventana todavía no está "viva". Se espera a
@@ -303,5 +316,45 @@ public sealed partial class MainWindow : Window
         }
 
         ContentFrame.Navigate(typeof(SettingsPage));
+    }
+
+    // Muestra el aviso abajo 3 segundos; uno nuevo reemplaza al anterior
+    private void MostrarToast(string mensaje, ToastService.Tipo tipo)
+    {
+        ToastIconExito.Visibility = tipo == ToastService.Tipo.Exito ? Visibility.Visible : Visibility.Collapsed;
+        ToastIconInfo.Visibility = tipo == ToastService.Tipo.Info ? Visibility.Visible : Visibility.Collapsed;
+        ToastIconError.Visibility = tipo == ToastService.Tipo.Error ? Visibility.Visible : Visibility.Collapsed;
+
+        ToastText.Text = mensaje;
+        _toastTimer.Stop();
+        ToastBorder.Visibility = Visibility.Collapsed;
+        ToastBorder.Visibility = Visibility.Visible;
+        _toastTimer.Start();
+    }
+
+    // Si una página navega a otra del menú, el menú marca la correcta
+    private void ContentFrame_Navigated(object sender, NavigationEventArgs e)
+    {
+        var item = ViewModel.NavItems.FirstOrDefault(i => i.PageType == e.SourcePageType);
+        if (item is not null && !ReferenceEquals(RootNavigationView.SelectedItem, item))
+        {
+            RootNavigationView.SelectedItem = item;
+        }
+    }
+
+    // Ctrl+N desde cualquier pantalla: va a Altas y abre "Añadir modelo"
+    private async void NuevoModeloAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+
+        if (ContentFrame.Content is not AltasModelosPage)
+        {
+            ContentFrame.Navigate(typeof(AltasModelosPage));
+        }
+
+        if (ContentFrame.Content is AltasModelosPage altas)
+        {
+            await altas.AbrirAñadirModeloAsync();
+        }
     }
 }

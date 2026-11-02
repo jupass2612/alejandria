@@ -64,6 +64,10 @@ public sealed partial class AddModelDialog : ContentDialog
         NumeroParteSmtBox.LostFocus += NumeroParte_LostFocus;
         NumeroParteBeBox.LostFocus += NumeroParte_LostFocus;
         NumeroParteTlaBox.LostFocus += NumeroParte_LostFocus;
+
+        // Al editar ya viene lleno; se habilita Guardar sin marcar errores
+        _listo = true;
+        Validar(mostrarErrores: false);
     }
 
     // Si el número de parte que se acaba de escribir ya pertenece a otro
@@ -139,9 +143,8 @@ public sealed partial class AddModelDialog : ContentDialog
             : !string.IsNullOrWhiteSpace(parteBe) ? parteBe
             : parteTla;
 
-        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(numero) || string.IsNullOrWhiteSpace(quienRecibe))
+        if (!Validar(mostrarErrores: true))
         {
-            ValidationInfoBar.IsOpen = true;
             args.Cancel = true;
             return;
         }
@@ -186,5 +189,59 @@ public sealed partial class AddModelDialog : ContentDialog
 
         return _existingRecords.FirstOrDefault(r =>
             r.Id != _editingId && (Coincide(r, parteSmt) || Coincide(r, parteBe) || Coincide(r, parteTla)));
+    }
+
+    // --- Validación en vivo ---
+
+    private bool _listo;
+    private readonly HashSet<string> _tocados = new();
+
+    private void CampoTexto_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (sender is FrameworkElement campo)
+        {
+            _tocados.Add(campo.Name);
+        }
+
+        Validar(mostrarErrores: false);
+    }
+
+    private void QuienRecibe_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _tocados.Add(QuienRecibeBox.Name);
+        Validar(mostrarErrores: false);
+    }
+
+    // Habilita Guardar y marca el error solo en los campos que ya se tocaron
+    private bool Validar(bool mostrarErrores)
+    {
+        if (!_listo)
+        {
+            return false;
+        }
+
+        var faltaNombre = string.IsNullOrWhiteSpace(NombreModeloBox.Text);
+        var faltaNumero = string.IsNullOrWhiteSpace(NumeroParteSmtBox.Text)
+            && string.IsNullOrWhiteSpace(NumeroParteBeBox.Text)
+            && string.IsNullOrWhiteSpace(NumeroParteTlaBox.Text);
+        var faltaQuien = QuienRecibeBox.SelectedItem is not string;
+
+        var tocoNumero = _tocados.Contains(NumeroParteSmtBox.Name)
+            || _tocados.Contains(NumeroParteBeBox.Name)
+            || _tocados.Contains(NumeroParteTlaBox.Name);
+
+        MostrarError(NombreErrorText, faltaNombre && (mostrarErrores || _tocados.Contains(NombreModeloBox.Name)), "Escribe el nombre del modelo.");
+        MostrarError(NumeroParteErrorText, faltaNumero && (mostrarErrores || tocoNumero), "Captura al menos un número de parte (SMT, BE o TLA).");
+        MostrarError(QuienRecibeErrorText, faltaQuien && (mostrarErrores || _tocados.Contains(QuienRecibeBox.Name)), "Elige quién recibe el documento.");
+
+        var valido = !faltaNombre && !faltaNumero && !faltaQuien;
+        IsPrimaryButtonEnabled = valido;
+        return valido;
+    }
+
+    private static void MostrarError(TextBlock texto, bool mostrar, string mensaje)
+    {
+        texto.Text = mensaje;
+        texto.Visibility = mostrar ? Visibility.Visible : Visibility.Collapsed;
     }
 }

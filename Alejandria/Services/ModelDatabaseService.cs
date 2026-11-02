@@ -93,6 +93,9 @@ public class ModelDatabaseService
             // Documento Malo" que antes se elegía en los campos de BD.
             await EnsureColumnExistsAsync(connection, DetalleTableName, "EstadoDocumento", "TEXT");
 
+            // MODELID de MODELS_MASTER, se captura en el Paso 2 y lo usa el Paso 3
+            await EnsureColumnExistsAsync(connection, DetalleTableName, "ImesModelId", "TEXT");
+
             _schemaVerified = true;
         }
         finally
@@ -291,7 +294,7 @@ public class ModelDatabaseService
             command.CommandText = $"""
                 SELECT ModeloId, Area, ImesModelsParents, ImesModelsMaster, ImesModelsSerialNumberSpecs, ImesModelsSerialNumberSpecsPacking,
                        UnityModelsParents, UnityModelsMaster, UnityModelsSerialNumberSpecs, UnityModelsSerialNumberSpecsPacking,
-                       WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento
+                       WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento, ImesModelId
                 FROM {DetalleTableName};
                 """;
             using var reader = await command.ExecuteReaderAsync();
@@ -374,7 +377,7 @@ public class ModelDatabaseService
         command.CommandText = $"""
             SELECT ModeloId, Area, ImesModelsParents, ImesModelsMaster, ImesModelsSerialNumberSpecs, ImesModelsSerialNumberSpecsPacking,
                    UnityModelsParents, UnityModelsMaster, UnityModelsSerialNumberSpecs, UnityModelsSerialNumberSpecsPacking,
-                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento
+                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento, ImesModelId
             FROM {DetalleTableName};
             """;
 
@@ -402,7 +405,7 @@ public class ModelDatabaseService
         command.CommandText = $"""
             SELECT ModeloId, Area, ImesModelsParents, ImesModelsMaster, ImesModelsSerialNumberSpecs, ImesModelsSerialNumberSpecsPacking,
                    UnityModelsParents, UnityModelsMaster, UnityModelsSerialNumberSpecs, UnityModelsSerialNumberSpecsPacking,
-                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento
+                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento, ImesModelId
             FROM {DetalleTableName}
             WHERE ModeloId = $modeloId AND Area = $area;
             """;
@@ -423,7 +426,7 @@ public class ModelDatabaseService
         command.CommandText = $"""
             SELECT ModeloId, Area, ImesModelsParents, ImesModelsMaster, ImesModelsSerialNumberSpecs, ImesModelsSerialNumberSpecsPacking,
                    UnityModelsParents, UnityModelsMaster, UnityModelsSerialNumberSpecs, UnityModelsSerialNumberSpecsPacking,
-                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento
+                   WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento, ImesModelId
             FROM {DetalleTableName}
             WHERE ModeloId = $modeloId;
             """;
@@ -447,11 +450,11 @@ public class ModelDatabaseService
             INSERT INTO {DetalleTableName}
                 (ModeloId, Area, ImesModelsParents, ImesModelsMaster, ImesModelsSerialNumberSpecs, ImesModelsSerialNumberSpecsPacking,
                  UnityModelsParents, UnityModelsMaster, UnityModelsSerialNumberSpecs, UnityModelsSerialNumberSpecsPacking,
-                 WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento)
+                 WorkOrder, Flujo, Ruta, Linea, PartLineBomMaintenance, EstadoDocumento, ImesModelId)
             VALUES
                 ($modeloId, $area, $imesParents, $imesMaster, $imesSerial, $imesSerialPacking,
                  $unityParents, $unityMaster, $unitySerial, $unitySerialPacking,
-                 $workOrder, $flujo, $ruta, $linea, $partLine, $estadoDocumento)
+                 $workOrder, $flujo, $ruta, $linea, $partLine, $estadoDocumento, $imesModelId)
             ON CONFLICT(ModeloId, Area) DO UPDATE SET
                 ImesModelsParents = excluded.ImesModelsParents,
                 ImesModelsMaster = excluded.ImesModelsMaster,
@@ -466,7 +469,8 @@ public class ModelDatabaseService
                 Ruta = excluded.Ruta,
                 Linea = excluded.Linea,
                 PartLineBomMaintenance = excluded.PartLineBomMaintenance,
-                EstadoDocumento = excluded.EstadoDocumento;
+                EstadoDocumento = excluded.EstadoDocumento,
+                ImesModelId = excluded.ImesModelId;
             """;
 
         command.Parameters.AddWithValue("$modeloId", detalle.ModeloId);
@@ -485,6 +489,7 @@ public class ModelDatabaseService
         command.Parameters.AddWithValue("$linea", ToDb(detalle.Linea));
         command.Parameters.AddWithValue("$partLine", ToDb(detalle.PartLineBomMaintenance));
         command.Parameters.AddWithValue("$estadoDocumento", ToDb(detalle.EstadoDocumento));
+        command.Parameters.AddWithValue("$imesModelId", ToDb(detalle.ImesModelId));
 
         await command.ExecuteNonQueryAsync();
     }
@@ -536,7 +541,8 @@ public class ModelDatabaseService
         Ruta = ReadString(reader, 12),
         Linea = ReadString(reader, 13),
         PartLineBomMaintenance = ReadString(reader, 14),
-        EstadoDocumento = string.IsNullOrEmpty(ReadString(reader, 15)) ? "Correcto" : ReadString(reader, 15)
+        EstadoDocumento = string.IsNullOrEmpty(ReadString(reader, 15)) ? "Correcto" : ReadString(reader, 15),
+        ImesModelId = ReadString(reader, 16)
     };
 
     private async Task<SqliteConnection> OpenConnectionAsync()

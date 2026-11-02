@@ -36,6 +36,9 @@ public class DetalleConfiguracion
     // Terminado y en Histórico se habilita "Adjuntar PDF".
     public string EstadoDocumento { get; set; } = "Correcto";
 
+    // MODELID que quedó en MODELS_MASTER (Paso 2), para armar el INSERT del Paso 3
+    public string ImesModelId { get; set; } = string.Empty;
+
     // True si al menos un campo tiene algo capturado.
     public bool TieneDatos =>
         !string.IsNullOrWhiteSpace(ImesModelsParents) || !string.IsNullOrWhiteSpace(ImesModelsMaster) || !string.IsNullOrWhiteSpace(ImesModelsSerialNumberSpecs) || !string.IsNullOrWhiteSpace(ImesModelsSerialNumberSpecsPacking) ||

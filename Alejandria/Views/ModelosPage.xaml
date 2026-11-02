@@ -9,8 +9,13 @@
     mc:Ignorable="d"
     Background="Transparent">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="BuscarAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <Grid Padding="32">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -19,7 +24,7 @@
         <StackPanel Grid.Row="0" Spacing="4">
             <TextBlock Text="Modelos" Style="{ThemeResource TitleTextBlockStyle}" />
             <TextBlock
-                Text="Configuración de base de datos (iMES) y de Plataforma iMES por modelo registrado."
+                Text="{x:Bind ViewModel.ConteoTexto, Mode=OneWay}"
                 Style="{ThemeResource BodyTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>
@@ -31,10 +36,36 @@
             Title="Base de datos no disponible"
             Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
             IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.HasError, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
             IsClosable="False" />
 
-        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <!-- Buscador y filtros -->
+        <Grid Grid.Row="2" Margin="0,16,0,0" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="480" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <AutoSuggestBox
+                x:Name="BuscarBox"
+                Grid.Column="0"
+                PlaceholderText="Buscar por nombre, número de modelo o número de parte (Ctrl+F)"
+                QueryIcon="Find"
+                Text="{x:Bind ViewModel.Busqueda, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <SelectorBar
+                x:Name="FiltroBar"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                SelectionChanged="FiltroBar_SelectionChanged">
+                <SelectorBarItem Text="Todos" Tag="Todos" IsSelected="True" />
+                <SelectorBarItem Text="Pendientes" Tag="Pendientes" />
+                <SelectorBarItem Text="En proceso" Tag="En proceso" />
+                <SelectorBarItem Text="Atrasados" Tag="Atrasados" />
+            </SelectorBar>
+        </Grid>
+
         <Border
+            Grid.Row="3"
+            Margin="0,16,0,0"
             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
@@ -54,16 +85,18 @@
                     Background="{ThemeResource CardStrokeColorDefaultBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="120" />
-                        <ColumnDefinition Width="200" />
-                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" MinWidth="160" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="140" />
                         <ColumnDefinition Width="150" />
                         <ColumnDefinition Width="110" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Número de modelo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock Grid.Column="1" Text="Nombre de modelo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Grid.Column="2" Text="Estatus General" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Grid.Column="3" Text="Plazo (5 días hábiles)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Grid.Column="4" Text="" />
+                    <TextBlock Grid.Column="2" Text="Estatus" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="3" Text="Avance" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="4" Text="Plazo (5 días hábiles)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="5" Text="" />
                 </Grid>
 
                 <!-- Filas -->
@@ -71,24 +104,36 @@
                     Grid.Row="1"
                     ItemsSource="{x:Bind ViewModel.Modelos}"
                     SelectionMode="None"
-                    IsItemClickEnabled="False"
-                    ScrollViewer.HorizontalScrollMode="Disabled"
-                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    IsItemClickEnabled="True"
+                    ItemClick="ModelosList_ItemClick">
 
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:ModeloResumenItem">
                             <Grid Padding="20,10" ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="120" />
-                                    <ColumnDefinition Width="200" />
-                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="*" MinWidth="160" />
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="140" />
                                     <ColumnDefinition Width="150" />
                                     <ColumnDefinition Width="110" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{x:Bind Modelo.NumeroModelo}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="1" Text="{x:Bind Modelo.NombreModelo}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind Modelo.NombreModelo}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Modelo.NombreModelo}" />
                                 <controls:StatusBadge Grid.Column="2" Status="{x:Bind EstatusGeneral}" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="2">
+
+                                <!-- Un punto por paso: Parents, Master, SerialSpecs, Plataforma -->
+                                <StackPanel Grid.Column="3" Spacing="4" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind AvanceTooltip}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Ellipse Width="10" Height="10" Fill="{x:Bind EstatusPaso1, Converter={StaticResource StatusToBrushConverter}}" />
+                                        <Ellipse Width="10" Height="10" Fill="{x:Bind EstatusPaso2, Converter={StaticResource StatusToBrushConverter}}" />
+                                        <Ellipse Width="10" Height="10" Fill="{x:Bind EstatusPaso3, Converter={StaticResource StatusToBrushConverter}}" />
+                                        <Ellipse Width="10" Height="10" Fill="{x:Bind EstatusPaso4, Converter={StaticResource StatusToBrushConverter}}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{x:Bind AvanceTexto}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4" VerticalAlignment="Center" Spacing="2">
                                     <TextBlock Text="{x:Bind FechaLimiteTexto}" FontSize="12" />
                                     <TextBlock
                                         Text="{x:Bind RetrasoTexto}"
@@ -103,7 +148,7 @@
                                         Visibility="{x:Bind EstaAtrasado, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}" />
                                 </StackPanel>
                                 <Button
-                                    Grid.Column="4"
+                                    Grid.Column="5"
                                     Content="Configurar"
                                     Style="{StaticResource TableRowActionButtonStyle}"
                                     VerticalAlignment="Center"
@@ -122,16 +167,27 @@
                     </ListView.ItemContainerStyle>
                 </ListView>
 
-                <TextBlock
+                <!-- Cargando / sin modelos -->
+                <controls:EmptyState
                     Grid.Row="1"
-                    Text="Todavía no hay modelos registrados. Agrégalos primero en &quot;Altas de Modelos&quot;."
-                    Style="{ThemeResource BodyTextBlockStyle}"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Margin="20,24,20,24"
-                    HorizontalAlignment="Left"
-                    Visibility="{x:Bind ViewModel.Modelos.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}" />
+                    Glyph="&#xE8A5;"
+                    Title="No hay modelos pendientes"
+                    Message="Los modelos aparecen aquí en cuanto se dan de alta, y se van a Histórico cuando se terminan."
+                    ActionText="Ir a Altas de Modelos"
+                    IsLoading="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+                    ActionClick="IrAAltas_Click"
+                    Visibility="{x:Bind ViewModel.MostrarEstadoVacio, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <!-- El filtro no dejó nada -->
+                <controls:EmptyState
+                    Grid.Row="1"
+                    Glyph="&#xE721;"
+                    Title="Ningún modelo coincide"
+                    Message="Prueba con otra búsqueda o cambia el filtro."
+                    ActionText="Quitar filtros"
+                    ActionClick="QuitarFiltros_Click"
+                    Visibility="{x:Bind ViewModel.SinResultados, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Border>
-        </ScrollViewer>
     </Grid>
 </Page>

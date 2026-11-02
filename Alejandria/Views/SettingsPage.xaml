@@ -91,6 +91,30 @@
 
                     <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
 
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Avanzar de paso automáticamente" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                Text="En Configurar modelo, al completar un paso pasa solo al siguiente. Apágalo si prefieres moverte con Anterior/Siguiente."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="AvanceAutomaticoToggle"
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            OnContent=""
+                            OffContent=""
+                            Toggled="AvanceAutomaticoToggle_Toggled" />
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
                     <StackPanel Spacing="12">
                         <Grid ColumnSpacing="16">
                             <Grid.ColumnDefinitions>

@@ -7,6 +7,9 @@
     xmlns:models="using:Alejandria.Models">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource AppBackgroundBrush}">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Modifiers="Control" Key="N" Invoked="NuevoModeloAccelerator_Invoked" />
+        </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
@@ -112,5 +115,38 @@
 
             <Frame x:Name="ContentFrame" />
         </NavigationView>
+
+        <!-- Toast: avisos cortos que se quitan solos -->
+        <Border
+            x:Name="ToastBorder"
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Margin="0,0,0,24"
+            MaxWidth="560"
+            Padding="16,12"
+            CornerRadius="12"
+            Background="{ThemeResource AppSurfaceBrush}"
+            BorderBrush="{ThemeResource AppBorderBrush}"
+            BorderThickness="1"
+            Visibility="Collapsed">
+            <Border.Transitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition FromVerticalOffset="24" />
+                </TransitionCollection>
+            </Border.Transitions>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Grid VerticalAlignment="Center">
+                    <FontIcon x:Name="ToastIconExito" Glyph="&#xE73E;" FontSize="16" Foreground="{ThemeResource AppSuccessBrush}" />
+                    <FontIcon x:Name="ToastIconInfo" Glyph="&#xE946;" FontSize="16" Foreground="{ThemeResource AppInfoBrush}" Visibility="Collapsed" />
+                    <FontIcon x:Name="ToastIconError" Glyph="&#xE783;" FontSize="16" Foreground="{ThemeResource AppDangerBrush}" Visibility="Collapsed" />
+                </Grid>
+                <TextBlock
+                    x:Name="ToastText"
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

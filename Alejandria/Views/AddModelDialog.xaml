@@ -13,30 +13,29 @@
 
     <StackPanel Spacing="12" MinWidth="380" MaxWidth="440">
         <InfoBar
-            x:Name="ValidationInfoBar"
-            Severity="Error"
-            Title="Faltan datos"
-            Message="El nombre de modelo, al menos un número de parte (SMT/BE/TLA), y quién recibe el documento son obligatorios."
-            IsOpen="False"
-            IsClosable="False" />
-
-        <InfoBar
             x:Name="DuplicadoInfoBar"
             Severity="Warning"
             Title="Este número de parte ya existe"
             IsOpen="False"
             IsClosable="False" />
 
-        <TextBox x:Name="NombreModeloBox" Header="Nombre de modelo" PlaceholderText="Ej. Charport Controller" />
+        <TextBox x:Name="NombreModeloBox" Header="Nombre de modelo *" PlaceholderText="Ej. Charport Controller" TextChanged="CampoTexto_Changed" />
+        <TextBlock
+            x:Name="NombreErrorText"
+            Style="{ThemeResource CaptionTextBlockStyle}"
+            Foreground="{ThemeResource AppDangerBrush}"
+            Margin="0,-6,0,0"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
 
         <StackPanel Spacing="8">
             <TextBlock
-                Text="Número de parte por área (déjalo vacío si no aplica)"
+                Text="Número de parte por área * (al menos uno; deja vacío el que no aplique)"
                 Style="{ThemeResource CaptionTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <TextBox x:Name="NumeroParteSmtBox" Header="SMT" />
+            <TextBox x:Name="NumeroParteSmtBox" Header="SMT" TextChanged="CampoTexto_Changed" />
             <StackPanel Spacing="4">
-                <TextBox x:Name="NumeroParteBeBox" Header="BE" />
+                <TextBox x:Name="NumeroParteBeBox" Header="BE" TextChanged="CampoTexto_Changed" />
                 <CheckBox
                     x:Name="BeMismoQueSmtCheck"
                     Content="Es el mismo número que SMT"
@@ -44,20 +43,35 @@
                     Unchecked="BeMismoQueSmtCheck_Unchecked" />
             </StackPanel>
             <StackPanel Spacing="4">
-                <TextBox x:Name="NumeroParteTlaBox" Header="TLA" />
+                <TextBox x:Name="NumeroParteTlaBox" Header="TLA" TextChanged="CampoTexto_Changed" />
                 <CheckBox
                     x:Name="TlaMismoQueSmtCheck"
                     Content="Es el mismo número que SMT"
                     Checked="TlaMismoQueSmtCheck_Checked"
                     Unchecked="TlaMismoQueSmtCheck_Unchecked" />
             </StackPanel>
+            <TextBlock
+                x:Name="NumeroParteErrorText"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource AppDangerBrush}"
+                Margin="0,-6,0,0"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
         </StackPanel>
 
         <ComboBox
             x:Name="QuienRecibeBox"
-            Header="Quién recibe el documento"
+            Header="Quién recibe el documento *"
             PlaceholderText="Selecciona una persona"
-            HorizontalAlignment="Stretch" />
+            HorizontalAlignment="Stretch"
+            SelectionChanged="QuienRecibe_SelectionChanged" />
+        <TextBlock
+            x:Name="QuienRecibeErrorText"
+            Style="{ThemeResource CaptionTextBlockStyle}"
+            Foreground="{ThemeResource AppDangerBrush}"
+            Margin="0,-6,0,0"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
         <DatePicker x:Name="FechaSolicitudPicker" Header="Fecha de solicitud" />
         <TextBox x:Name="QuienMandaBox" Header="Quién mandó el documento" PlaceholderText="Nombre de quien envía" />
     </StackPanel>

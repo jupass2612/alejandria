@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## 1.22.0
+- Configurar modelo: al completar un paso, a los 1.5 s pasa solo al siguiente. Se apaga en Ajustes → "Avanzar de paso automáticamente".
+- El MODELID se captura en el Paso 2 (MODELS_MASTER), se guarda por área y el Paso 3 ya lo trae para armar el INSERT.
+- Enter ya no guarda la configuración si estás escribiendo en una caja de texto (serial, MODELID, etc.).
+- Modelos: buscador por nombre, número de modelo o número de parte; filtros Todos · Pendientes · En proceso · Atrasados; los atrasados salen arriba. Clic en cualquier parte de la fila abre Configurar.
+- Modelos: columna Avance con un punto de color por paso (Parents, Master, SerialSpecs, Plataforma) y "N/4 pasos".
+- Añadir modelo: Guardar se habilita solo cuando están el nombre, al menos un número de parte y quién recibe; el error se marca debajo del campo.
+- Altas de Modelos: el nombre ocupa el espacio libre y Editar / Ver PDF / Reemplazar PDF van en un menú "⋯" por fila.
+- Mismos estados vacíos y de carga en Altas, Modelos e Histórico: ícono, mensaje y acción.
+- Avisos tipo toast abajo de la ventana ("Guardado", "SQL copiado", "PDF adjuntado"...) que se quitan solos a los 3 s.
+- Atajos: Ctrl+N añadir modelo (desde cualquier pantalla), Ctrl+F buscar (Modelos e Histórico), Ctrl+S guardar y Alt+← / Alt+→ entre pasos (Configurar).
+
 ## 1.21.0
 - Configurar modelo: el encabezado ahora es una sola franja con Área, Estado del documento, Plazo, Estatus del área y Estatus del modelo, más una línea con lo que falta. Antes eran dos tarjetas separadas.
 - Se quitaron "Estatus BD Consolidado" y "Estatus Plataforma iMES" del encabezado; ya se ven en la barra de pasos.

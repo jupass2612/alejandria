@@ -17,28 +17,61 @@ public sealed partial class AltasModelosPage : Page
         Loaded += AltasModelosPage_Loaded;
     }
 
+    // Ctrl+N puede pedir el diálogo antes de que la página termine de cargar
+    private bool _abrirAñadirAlCargar;
+    private bool _cargada;
+
     private async void AltasModelosPage_Loaded(object sender, RoutedEventArgs e)
     {
         await ViewModel.InitializeAsync();
+        _cargada = true;
+
+        if (_abrirAñadirAlCargar)
+        {
+            _abrirAñadirAlCargar = false;
+            await AbrirAñadirModeloAsync();
+        }
     }
 
-    private async void AddModelButton_Click(object sender, RoutedEventArgs e)
+    private async void AddModelButton_Click(object sender, RoutedEventArgs e) => await AbrirAñadirModeloAsync();
+
+    public async Task AbrirAñadirModeloAsync()
     {
+        if (!_cargada)
+        {
+            _abrirAñadirAlCargar = true;
+            return;
+        }
+
         var dialog = new AddModelDialog(ViewModel.Records.ToList())
         {
             XamlRoot = XamlRoot
         };
 
-        var result = await dialog.ShowAsync();
+        ContentDialogResult result;
+        try
+        {
+            result = await dialog.ShowAsync();
+        }
+        catch (Exception)
+        {
+            // Ya había otro diálogo abierto
+            return;
+        }
+
         if (result == ContentDialogResult.Primary && dialog.Result is { } newRecord)
         {
             await ViewModel.AddModelAsync(newRecord);
+            if (!ViewModel.HasError)
+            {
+                ToastService.Mostrar($"Modelo \"{newRecord.NombreModelo}\" registrado.");
+            }
         }
     }
 
     private async void EditModelButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: ModelRecord existing })
+        if (sender is not FrameworkElement { Tag: ModelRecord existing })
         {
             return;
         }
@@ -52,12 +85,16 @@ public sealed partial class AltasModelosPage : Page
         if (result == ContentDialogResult.Primary && dialog.Result is { } updatedRecord)
         {
             await ViewModel.UpdateModelAsync(updatedRecord);
+            if (!ViewModel.HasError)
+            {
+                ToastService.Mostrar("Cambios guardados.");
+            }
         }
     }
 
     private async void DocumentoButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: ModelRecord record })
+        if (sender is not FrameworkElement { Tag: ModelRecord record })
         {
             return;
         }
@@ -73,7 +110,7 @@ public sealed partial class AltasModelosPage : Page
 
     private async void ReemplazarDocumentoButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: ModelRecord record })
+        if (sender is not FrameworkElement { Tag: ModelRecord record })
         {
             return;
         }
@@ -94,6 +131,8 @@ public sealed partial class AltasModelosPage : Page
         {
             return;
         }
+
+        ToastService.Mostrar("PDF adjuntado.");
 
         var areasPendientes = await ViewModel.ObtenerAreasPendientesDeCorreccionAsync(record.Id);
         if (areasPendientes.Count == 0)

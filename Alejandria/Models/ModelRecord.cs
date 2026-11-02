@@ -124,4 +124,7 @@ public class ModelRecord
     public bool MostrarBotonDocumento => !EsHistorico || TieneDocumentoAdjunto;
 
     public bool PuedeReemplazarDocumento => TieneDocumentoAdjunto && !EsHistorico;
+
+    // Si el menú "⋯" de la fila tiene algo que mostrar
+    public bool TieneAcciones => PuedeEditar || MostrarBotonDocumento;
 }

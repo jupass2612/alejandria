@@ -33,6 +33,7 @@ public sealed partial class SettingsPage : Page
 
         NotificationsToggle.IsOn = _preferences.NotificationsEnabled;
         BusquedaImesAutomaticaToggle.IsOn = _preferences.BusquedaImesAutomatica;
+        AvanceAutomaticoToggle.IsOn = _preferences.AvanceAutomaticoPasos;
         _settings.Load();
         VersionInstaladaText.Text = $"Versión instalada: {UpdateService.VersionActualTexto(_settings.UpdatesFolder)}";
 
@@ -49,7 +50,7 @@ public sealed partial class SettingsPage : Page
         }
 
         var theme = (ThemeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "Default";
-        _preferences.Save(theme, NotificationsToggle.IsOn, BusquedaImesAutomaticaToggle.IsOn);
+        GuardarPreferencias(theme);
 
         if (XamlRoot?.Content is FrameworkElement root)
         {
@@ -70,7 +71,7 @@ public sealed partial class SettingsPage : Page
         }
 
         var theme = (ThemeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "Default";
-        _preferences.Save(theme, NotificationsToggle.IsOn, BusquedaImesAutomaticaToggle.IsOn);
+        GuardarPreferencias(theme);
     }
 
     private void BusquedaImesAutomaticaToggle_Toggled(object sender, RoutedEventArgs e)
@@ -81,7 +82,7 @@ public sealed partial class SettingsPage : Page
         }
 
         var theme = (ThemeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "Default";
-        _preferences.Save(theme, NotificationsToggle.IsOn, BusquedaImesAutomaticaToggle.IsOn);
+        GuardarPreferencias(theme);
     }
 
     private async void BuscarActualizacionButton_Click(object sender, RoutedEventArgs e)
@@ -217,4 +218,18 @@ public sealed partial class SettingsPage : Page
         ActualizacionInfoBar.Message = mensaje;
         ActualizacionInfoBar.IsOpen = true;
     }
+
+    private void AvanceAutomaticoToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isLoadingInitialState)
+        {
+            return;
+        }
+
+        var theme = (ThemeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "Default";
+        GuardarPreferencias(theme);
+    }
+
+    private void GuardarPreferencias(string theme) =>
+        _preferences.Save(theme, NotificationsToggle.IsOn, BusquedaImesAutomaticaToggle.IsOn, AvanceAutomaticoToggle.IsOn);
 }

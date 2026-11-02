@@ -22,10 +22,15 @@ public sealed partial class ModelConfigPage : Page
     // guardar de una vez.
     private readonly DispatcherTimer _autoguardadoTimer = new() { Interval = TimeSpan.FromSeconds(2) };
 
+    // Al completar un paso, espera un momento y pasa al siguiente
+    private readonly DispatcherTimer _avanceTimer = new() { Interval = TimeSpan.FromMilliseconds(1500) };
+    private int _pasoPorAvanzar;
+
     public ModelConfigPage()
     {
         InitializeComponent();
         _autoguardadoTimer.Tick += AutoguardadoTimer_Tick;
+        _avanceTimer.Tick += AvanceTimer_Tick;
     }
 
     private void ReiniciarAutoguardado()
@@ -82,7 +87,7 @@ public sealed partial class ModelConfigPage : Page
             return;
         }
 
-        SuccessInfoBar.IsOpen = false;
+        _avanceTimer.Stop();
         await ViewModel.CargarAreaAsync(area);
         PopulateFieldsFromDetalle();
         await BuscarEnImesAutomaticoSiAplicaAsync();
@@ -115,7 +120,7 @@ public sealed partial class ModelConfigPage : Page
         {
             ViewModel.AplicarWorkOrdersImes(candidatos);
             PopulateFieldsFromDetalle();
-            SuccessInfoBar.IsOpen = true;
+            ToastService.Mostrar(ViewModel.SuccessMessage);
         }
     }
 
@@ -167,6 +172,62 @@ public sealed partial class ModelConfigPage : Page
         if (!_isPopulatingFields)
         {
             ReiniciarAutoguardado();
+            ProgramarAvanceSiSeCompleto(combo.Name);
+        }
+    }
+
+    // Si el combo terminó su paso, programa pasar al siguiente
+    private void ProgramarAvanceSiSeCompleto(string nombreCombo)
+    {
+        _avanceTimer.Stop();
+
+        if (!_preferences.AvanceAutomaticoPasos)
+        {
+            return;
+        }
+
+        var paso = nombreCombo switch
+        {
+            nameof(ParentsCombo) => 1,
+            nameof(MasterCombo) => 2,
+            nameof(SerialSpecsCombo) or nameof(SerialSpecsPackingCombo) => 3,
+            _ => 0
+        };
+
+        var estatus = paso switch
+        {
+            1 => ViewModel.EstatusPaso1,
+            2 => ViewModel.EstatusPaso2,
+            3 => ViewModel.EstatusPaso3,
+            _ => string.Empty
+        };
+
+        if (paso == 0 || paso != ViewModel.PasoActual || estatus != ConfigStatusHelper.Terminado)
+        {
+            return;
+        }
+
+        _pasoPorAvanzar = paso;
+        _avanceTimer.Start();
+    }
+
+    private void AvanceTimer_Tick(object? sender, object e)
+    {
+        _avanceTimer.Stop();
+
+        // Solo si sigue en el mismo paso (no se movió a mano)
+        if (ViewModel.PasoActual == _pasoPorAvanzar)
+        {
+            IrAPaso(_pasoPorAvanzar + 1);
+        }
+    }
+
+    private void ModelIdBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Al cargar el área también cambia, ahí no hay que guardar
+        if (!ViewModel.IsLoading && !_isPopulatingFields)
+        {
+            ReiniciarAutoguardado();
         }
     }
 
@@ -206,11 +267,10 @@ public sealed partial class ModelConfigPage : Page
         await GuardarConfiguracionAsync();
     }
 
-    // Enter guarda igual que el botón — para no tener que ir a buscarlo
-    // con el mouse cuando se configuran varios modelos seguidos.
+    // Enter guarda igual que el botón, pero no si se está escribiendo en una caja de texto
     private async void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key != Windows.System.VirtualKey.Enter)
+        if (e.Key != Windows.System.VirtualKey.Enter || e.OriginalSource is TextBox)
         {
             return;
         }
@@ -219,23 +279,46 @@ public sealed partial class ModelConfigPage : Page
         await GuardarConfiguracionAsync();
     }
 
+    // Ctrl+S guarda
+    private async void GuardarAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        await GuardarConfiguracionAsync();
+    }
+
+    // Alt+← y Alt+→ entre pasos
+    private void PasoAnteriorAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        IrAPaso(ViewModel.PasoActual - 1);
+    }
+
+    private void PasoSiguienteAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        IrAPaso(ViewModel.PasoActual + 1);
+    }
+
     private async Task GuardarConfiguracionAsync()
     {
         _autoguardadoTimer.Stop();
         AutoguardadoText.Visibility = Visibility.Collapsed;
-        SuccessInfoBar.IsOpen = false;
         var ok = await ViewModel.SaveAsync();
 
         var preferences = new UserPreferencesService();
         preferences.Load();
 
-        SuccessInfoBar.IsOpen = ok && preferences.NotificationsEnabled;
+        if (ok && preferences.NotificationsEnabled)
+        {
+            ToastService.Mostrar(ViewModel.SuccessMessage);
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         _autoguardadoTimer.Stop();
+        _avanceTimer.Stop();
     }
 
     private async void CopiarConfiguracionButton_Click(object sender, RoutedEventArgs e)
@@ -245,19 +328,16 @@ public sealed partial class ModelConfigPage : Page
             return;
         }
 
-        SuccessInfoBar.IsOpen = false;
         var ok = await ViewModel.CopiarConfiguracionDeAsync(areaOrigen);
         if (ok)
         {
             PopulateFieldsFromDetalle();
-            SuccessInfoBar.IsOpen = true;
+            ToastService.Mostrar(ViewModel.SuccessMessage);
         }
     }
 
     private async void BuscarEnImesButton_Click(object sender, RoutedEventArgs e)
     {
-        SuccessInfoBar.IsOpen = false;
-
         // Clic manual = quiere ver el dato más reciente, no lo que quedó
         // en caché de una consulta automática de hace un momento.
         ImesApiService.LimpiarCache();
@@ -278,7 +358,7 @@ public sealed partial class ModelConfigPage : Page
             // que ya no hay que elegir una, se juntan todas (ver AplicarWorkOrdersImes).
             ViewModel.AplicarWorkOrdersImes(candidatos);
             PopulateFieldsFromDetalle();
-            SuccessInfoBar.IsOpen = true;
+            ToastService.Mostrar(ViewModel.SuccessMessage);
             return;
         }
 
@@ -389,8 +469,7 @@ public sealed partial class ModelConfigPage : Page
         paquete.SetText(ViewModel.SqlSpecs);
         Clipboard.SetContent(paquete);
 
-        ViewModel.SuccessMessage = "INSERT de MODELS_SERIALNUMBERSPECS copiado. Revísalo antes de correrlo en iMES.";
-        SuccessInfoBar.IsOpen = true;
+        ToastService.Mostrar("SQL copiado. Revísalo antes de correrlo en iMES.");
     }
 
     private void PasoButton_Click(object sender, RoutedEventArgs e)
@@ -408,6 +487,7 @@ public sealed partial class ModelConfigPage : Page
     // Cambia de paso y regresa arriba para que se vea desde el inicio
     private void IrAPaso(int paso)
     {
+        _avanceTimer.Stop();
         ViewModel.IrAPaso(paso);
         PasosScroll.ChangeView(null, 0, null);
     }

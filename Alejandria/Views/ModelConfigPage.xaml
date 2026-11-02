@@ -10,6 +10,12 @@
     Background="Transparent"
     KeyDown="Page_KeyDown">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Modifiers="Control" Key="S" Invoked="GuardarAccelerator_Invoked" />
+        <KeyboardAccelerator Modifiers="Menu" Key="Left" Invoked="PasoAnteriorAccelerator_Invoked" />
+        <KeyboardAccelerator Modifiers="Menu" Key="Right" Invoked="PasoSiguienteAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <Grid Padding="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -144,21 +150,13 @@
         </InfoBar>
 
 
-        <StackPanel Grid.Row="4" Margin="0,16,0,0" Spacing="8">
+        <StackPanel Grid.Row="4" Margin="0,16,0,0" Spacing="8" Visibility="{x:Bind ViewModel.HasError, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
             <InfoBar
                 Severity="Error"
                 Title="Ocurrió un problema"
                 Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
                 IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
                 IsClosable="False" />
-
-            <InfoBar
-                x:Name="SuccessInfoBar"
-                Severity="Success"
-                Title="Listo"
-                Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}"
-                IsOpen="False"
-                IsClosable="True" />
         </StackPanel>
 
         <ScrollViewer x:Name="PasosScroll" Grid.Row="5" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -303,15 +301,30 @@
                     </Grid>
 
                     <TextBlock
-                        Text="Da de alta el número de parte en MODELS_MASTER ligado a su padre y marca quién lo hizo."
+                        Text="Da de alta el número de parte en MODELS_MASTER ligado a su padre, anota el MODELID que quedó y marca quién lo hizo."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
 
-                    <StackPanel Spacing="6" MaxWidth="360" HorizontalAlignment="Left">
-                        <TextBlock Text="¿Quién lo dio de alta?" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <ComboBox x:Name="MasterCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
-                    </StackPanel>
+                    <Grid ColumnSpacing="16" MaxWidth="736" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="MODELID" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox
+                                FontFamily="Consolas"
+                                PlaceholderText="ID que quedó en MODELS_MASTER"
+                                ToolTipService.ToolTip="Se usa en el Paso 3 para armar el INSERT de MODELS_SERIALNUMBERSPECS"
+                                Text="{x:Bind ViewModel.ModelIdTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="ModelIdBox_TextChanged" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="¿Quién lo dio de alta?" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="MasterCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -377,11 +390,12 @@
                                 SelectionChanged="PlantillaSpecsCombo_SelectionChanged" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="6">
-                            <TextBlock Text="MODELID" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="MODELID (del Paso 2)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBox
                                 FontFamily="Consolas"
                                 PlaceholderText="ID en MODELS_MASTER"
-                                Text="{x:Bind ViewModel.ModelIdTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                Text="{x:Bind ViewModel.ModelIdTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="ModelIdBox_TextChanged" />
                         </StackPanel>
                     </Grid>
 

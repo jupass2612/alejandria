@@ -9,6 +9,10 @@
     mc:Ignorable="d"
     Background="Transparent">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="BuscarAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <Grid Padding="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -32,7 +36,7 @@
             Margin="0,16,0,0"
             MaxWidth="420"
             HorizontalAlignment="Left"
-            PlaceholderText="Buscar por nombre de modelo o número de parte (SMT/BE/TLA)..."
+            PlaceholderText="Buscar por nombre de modelo o número de parte (Ctrl+F)"
             TextChanged="SearchBox_TextChanged" />
 
         <InfoBar
@@ -42,6 +46,7 @@
             Title="Base de datos no disponible"
             Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
             IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.HasError, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
             IsClosable="False" />
 
         <ScrollViewer Grid.Row="3" Margin="0,16,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
@@ -146,15 +151,13 @@
                     </ListView.ItemContainerStyle>
                 </ListView>
 
-                <TextBlock
+                <controls:EmptyState
                     Grid.Row="1"
-                    Text="{x:Bind ViewModel.MensajeVacio, Mode=OneWay}"
-                    Style="{ThemeResource BodyTextBlockStyle}"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Margin="20,24,20,24"
-                    HorizontalAlignment="Left"
-                    TextWrapping="Wrap"
-                    Visibility="{x:Bind ViewModel.Modelos.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}" />
+                    Glyph="&#xE81C;"
+                    Title="{x:Bind ViewModel.TituloVacio, Mode=OneWay}"
+                    Message="{x:Bind ViewModel.MensajeVacio, Mode=OneWay}"
+                    IsLoading="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.MostrarEstadoVacio, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Border>
         </ScrollViewer>

@@ -3,6 +3,7 @@ using Alejandria.Services;
 using Alejandria.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace Alejandria.Views;
 
@@ -150,5 +151,11 @@ public sealed partial class HistoricoPage : Page
             };
             await errorDialog.ShowAsync();
         }
+    }
+
+    private void BuscarAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        SearchBox.Focus(FocusState.Keyboard);
     }
 }
