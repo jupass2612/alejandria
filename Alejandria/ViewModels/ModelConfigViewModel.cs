@@ -242,9 +242,6 @@ public partial class ModelConfigViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private string estatusBdConsolidado = ConfigStatusHelper.Pendiente;
-
-    [ObservableProperty]
     private string estatusPlataformaImes = ConfigStatusHelper.Pendiente;
 
     [ObservableProperty]
@@ -441,7 +438,6 @@ public partial class ModelConfigViewModel : ObservableObject
     {
         var resumen = ConfigStatusHelper.ComputeResumen(Modelo, Detalle);
 
-        EstatusBdConsolidado = resumen.EstatusBd;
         EstatusPlataformaImes = resumen.EstatusPlataforma;
         EstatusGeneral = resumen.EstatusGeneral;
 

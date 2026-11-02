@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.21.0
+- Configurar modelo: el encabezado ahora es una sola franja con Área, Estado del documento, Plazo, Estatus del área y Estatus del modelo, más una línea con lo que falta. Antes eran dos tarjetas separadas.
+- Se quitaron "Estatus BD Consolidado" y "Estatus Plataforma iMES" del encabezado; ya se ven en la barra de pasos.
+- El aviso de "Mismo número de parte en otra área" ya no deja un hueco cuando no aplica.
+- Así la barra de pasos queda a la vista al abrir la pantalla.
+
 ## 1.20.2
 - Corregido: "Quién recibe el documento" en Añadir modelo y Actualizar tenía su propia lista escrita a mano, con "Juan Pablo Solis" en vez de "Juan Pablo Solis Sanchez" como en Configurar. Ahora las dos usan la misma lista, y los registros viejos con el nombre corto se muestran con el nombre completo.
 - Corregido: en Histórico el encabezado de la última columna no medía lo mismo que en las filas.

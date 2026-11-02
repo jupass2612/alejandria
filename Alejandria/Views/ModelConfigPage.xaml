@@ -37,7 +37,7 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Selector de área: cada área tiene su propia configuración independiente -->
+        <!-- Franja de contexto: área, documento, plazo y estatus -->
         <Border
             Grid.Row="1"
             Margin="0,16,0,0"
@@ -45,56 +45,66 @@
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource CardCornerRadius}"
-            Padding="20"
-            HorizontalAlignment="Stretch">
-            <StackPanel Spacing="16">
-                <Grid ColumnSpacing="16">
+            Padding="20,16">
+            <StackPanel Spacing="12">
+                <Grid ColumnSpacing="32">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                        <TextBlock Text="Área que se está configurando" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <TextBlock
-                            Text="Cada área tiene su propia configuración de BD y Plataforma iMES, independiente de las demás."
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            TextWrapping="Wrap" />
+
+                    <!-- Cada área tiene su propia configuración -->
+                    <StackPanel Grid.Column="0" Spacing="6">
+                        <TextBlock Text="Área" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox
+                            x:Name="AreaCombo"
+                            MinWidth="140"
+                            ToolTipService.ToolTip="Cada área tiene su propia configuración de BD y Plataforma iMES"
+                            SelectionChanged="AreaCombo_SelectionChanged" />
                     </StackPanel>
-                    <ComboBox
-                        x:Name="AreaCombo"
-                        Grid.Column="1"
-                        MinWidth="160"
-                        VerticalAlignment="Center"
-                        SelectionChanged="AreaCombo_SelectionChanged" />
+
+                    <StackPanel Grid.Column="1" Spacing="6">
+                        <TextBlock Text="Estado del documento" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox
+                            x:Name="EstadoDocumentoCombo"
+                            MinWidth="200"
+                            ItemsSource="{x:Bind ViewModel.EstadoDocumentoOptions}"
+                            ToolTipService.ToolTip="Si queda pendiente a correcciones, en Histórico se habilita &quot;Adjuntar PDF&quot;. No afecta el avance."
+                            SelectionChanged="StatusField_SelectionChanged" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Top">
+                        <TextBlock Text="Plazo (5 días hábiles)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.FechaLimiteTexto, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.RetrasoTexto, Mode=OneWay}"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource AppDangerBrush}"
+                            Visibility="{x:Bind ViewModel.EstaAtrasado, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.RetrasoTexto, Mode=OneWay}"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Visibility="{x:Bind ViewModel.EstaAtrasado, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Spacing="6" VerticalAlignment="Top">
+                        <TextBlock Text="Estatus del área" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <controls:StatusBadge Status="{x:Bind ViewModel.EstatusGeneral, Mode=OneWay}" HorizontalAlignment="Left" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Spacing="6" VerticalAlignment="Top">
+                        <TextBlock Text="Estatus del modelo" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <controls:StatusBadge Status="{x:Bind ViewModel.EstatusGeneralModelo, Mode=OneWay}" HorizontalAlignment="Left" ToolTipService.ToolTip="Todas las áreas del modelo" />
+                    </StackPanel>
                 </Grid>
 
-                <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
-
-                <Grid ColumnSpacing="16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                        <TextBlock Text="Estado del Documento" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <TextBlock
-                            Text="Si queda pendiente a correcciones, en Histórico se habilita &quot;Adjuntar PDF&quot; para subir la versión corregida — no afecta el avance de esta área."
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ComboBox
-                        x:Name="EstadoDocumentoCombo"
-                        Grid.Column="1"
-                        MinWidth="180"
-                        VerticalAlignment="Center"
-                        ItemsSource="{x:Bind ViewModel.EstadoDocumentoOptions}"
-                        SelectionChanged="StatusField_SelectionChanged" />
-                </Grid>
-
-                <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
-
+                <!-- Qué le falta a esta área -->
                 <Grid ColumnSpacing="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -104,14 +114,15 @@
                         Grid.Column="0"
                         Glyph="{x:Bind ViewModel.ResumenFaltantesGlyph, Mode=OneWay}"
                         Foreground="{x:Bind ViewModel.ResumenFaltantesTono, Mode=OneWay, Converter={StaticResource KpiTonoToBrushConverter}}"
-                        FontSize="16"
-                        VerticalAlignment="Top" />
+                        FontSize="14"
+                        VerticalAlignment="Center" />
                     <TextBlock
                         Grid.Column="1"
                         Text="{x:Bind ViewModel.ResumenFaltantes, Mode=OneWay}"
                         Foreground="{x:Bind ViewModel.ResumenFaltantesTono, Mode=OneWay, Converter={StaticResource KpiTonoToBrushConverter}}"
-                        Style="{ThemeResource BodyStrongTextBlockStyle}"
-                        TextWrapping="Wrap" />
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        TextWrapping="Wrap"
+                        VerticalAlignment="Center" />
                 </Grid>
             </StackPanel>
         </Border>
@@ -120,61 +131,18 @@
         <InfoBar
             x:Name="CopiarConfigInfoBar"
             Grid.Row="2"
-            Margin="0,16,0,0"
+            Margin="0,12,0,0"
             Severity="Informational"
             Title="Mismo número de parte en otra área"
             Message="{x:Bind ViewModel.MensajeConfigCopiable, Mode=OneWay}"
             IsOpen="{x:Bind ViewModel.TieneConfigCopiable, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.TieneConfigCopiable, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
             IsClosable="False">
             <InfoBar.ActionButton>
                 <Button Content="Copiar configuración" Click="CopiarConfiguracionButton_Click" />
             </InfoBar.ActionButton>
         </InfoBar>
 
-        <!-- Resumen de estatus -->
-        <Border
-            Grid.Row="3"
-            Margin="0,16,0,0"
-            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="{StaticResource CardCornerRadius}"
-            Padding="20"
-            HorizontalAlignment="Stretch">
-            <StackPanel Orientation="Horizontal" Spacing="32">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Estatus BD Consolidado" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <controls:StatusBadge Status="{x:Bind ViewModel.EstatusBdConsolidado, Mode=OneWay}" />
-                </StackPanel>
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Estatus Plataforma iMES" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <controls:StatusBadge Status="{x:Bind ViewModel.EstatusPlataformaImes, Mode=OneWay}" />
-                </StackPanel>
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Estatus General (área seleccionada)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <controls:StatusBadge Status="{x:Bind ViewModel.EstatusGeneral, Mode=OneWay}" />
-                </StackPanel>
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Estatus General (modelo completo)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <controls:StatusBadge Status="{x:Bind ViewModel.EstatusGeneralModelo, Mode=OneWay}" />
-                </StackPanel>
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Plazo (5 días hábiles)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock Text="{x:Bind ViewModel.FechaLimiteTexto, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock
-                        Text="{x:Bind ViewModel.RetrasoTexto, Mode=OneWay}"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Foreground="{ThemeResource AppDangerBrush}"
-                        Visibility="{x:Bind ViewModel.EstaAtrasado, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <TextBlock
-                        Text="{x:Bind ViewModel.RetrasoTexto, Mode=OneWay}"
-                        FontSize="12"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Visibility="{x:Bind ViewModel.EstaAtrasado, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
 
         <StackPanel Grid.Row="4" Margin="0,16,0,0" Spacing="8">
             <InfoBar
