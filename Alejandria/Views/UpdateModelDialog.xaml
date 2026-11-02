@@ -61,12 +61,7 @@
             x:Name="QuienRecibeBox"
             Header="Quién recibe el documento"
             PlaceholderText="Selecciona una persona"
-            HorizontalAlignment="Stretch">
-            <ComboBoxItem Content="Reynaldo Barrera" />
-            <ComboBoxItem Content="Juan Pablo Solis" />
-            <ComboBoxItem Content="Cecilia Saldivar" />
-            <ComboBoxItem Content="Roberto Uriel Martinez" />
-        </ComboBox>
+            HorizontalAlignment="Stretch" />
         <DatePicker x:Name="FechaSolicitudPicker" Header="Fecha de solicitud" />
         <TextBox x:Name="QuienMandaBox" Header="Quién mandó el documento" PlaceholderText="Nombre de quien envía" />
     </StackPanel>

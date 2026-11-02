@@ -513,7 +513,7 @@ public class ModelDatabaseService
         NumeroParteSmt = ReadString(reader, 3),
         NumeroParteBe = ReadString(reader, 4),
         NumeroParteTla = ReadString(reader, 5),
-        QuienRecibeDocumento = ReadString(reader, 6),
+        QuienRecibeDocumento = ConfigStatusHelper.NormalizarResponsable(ReadString(reader, 6)),
         FechaSolicitud = DateTime.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
         QuienMandoDocumento = ReadString(reader, 8),
         DocumentoAdjunto = ReadString(reader, 9)

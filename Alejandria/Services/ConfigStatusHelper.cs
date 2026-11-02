@@ -40,6 +40,21 @@ public static class ConfigStatusHelper
         "Reynaldo Barrera"
     };
 
+    // Regresa el nombre como está en Responsables. Registros viejos
+    // guardaron nombres cortos ("Juan Pablo Solis"), se empatan por inicio.
+    public static string NormalizarResponsable(string? nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            return string.Empty;
+        }
+
+        var limpio = nombre.Trim();
+        return Responsables.FirstOrDefault(r => string.Equals(r, limpio, StringComparison.OrdinalIgnoreCase))
+            ?? Responsables.FirstOrDefault(r => r.StartsWith(limpio + " ", StringComparison.OrdinalIgnoreCase))
+            ?? limpio;
+    }
+
     // Opciones para los campos de BD (iMES). "Bloqueado" ya no es una
     // opción aquí — ahora se controla aparte con "Estado del Documento".
     public static IReadOnlyList<string> BdStatusOptions { get; } =

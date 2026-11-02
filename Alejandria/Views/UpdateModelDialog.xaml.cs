@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alejandria.Models;
+using Alejandria.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -23,6 +24,9 @@ public sealed partial class UpdateModelDialog : ContentDialog
     {
         InitializeComponent();
         _original = original;
+
+        // Misma lista que los selectores de Configurar
+        QuienRecibeBox.ItemsSource = ConfigStatusHelper.Responsables;
 
         ModeloOrigenText.Text =
             $"Creando una actualización de \"{original.NumeroModelo} — {original.NombreModelo}\". " +
@@ -83,7 +87,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
     private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         var nombre = NombreModeloBox.Text?.Trim() ?? string.Empty;
-        var quienRecibe = (QuienRecibeBox.SelectedItem as ComboBoxItem)?.Content as string ?? string.Empty;
+        var quienRecibe = QuienRecibeBox.SelectedItem as string ?? string.Empty;
 
         var (smt, smtCambio) = ResolverArea(SmtCambioCheck, SmtNuevoBox, _original.NumeroParteSmt);
         var (be, beCambio) = ResolverArea(BeCambioCheck, BeNuevoBox, _original.NumeroParteBe);

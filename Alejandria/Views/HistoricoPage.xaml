@@ -69,7 +69,7 @@
                         <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="130" />
                         <ColumnDefinition Width="150" />
-                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="320" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Número de modelo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock Grid.Column="1" Text="Nombre de modelo" Style="{ThemeResource BodyStrongTextBlockStyle}" />

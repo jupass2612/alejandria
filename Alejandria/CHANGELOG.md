@@ -1,5 +1,9 @@
 # Historial de cambios
 
+## 1.20.2
+- Corregido: "Quién recibe el documento" en Añadir modelo y Actualizar tenía su propia lista escrita a mano, con "Juan Pablo Solis" en vez de "Juan Pablo Solis Sanchez" como en Configurar. Ahora las dos usan la misma lista, y los registros viejos con el nombre corto se muestran con el nombre completo.
+- Corregido: en Histórico el encabezado de la última columna no medía lo mismo que en las filas.
+
 ## 1.20.1
 - Paso 3 reacomodado en el orden de trabajo: primero se captura el serial de ejemplo, la plantilla y el MODELID; luego se ve la tabla de cómo debe quedar MODELS_SERIALNUMBERSPECS y el INSERT; después "Probar en iMES"; y al final quién lo dio de alta (SerialSpecs y Packing).
 

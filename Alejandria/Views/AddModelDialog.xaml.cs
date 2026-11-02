@@ -1,5 +1,6 @@
 using System.Linq;
 using Alejandria.Models;
+using Alejandria.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -27,6 +28,9 @@ public sealed partial class AddModelDialog : ContentDialog
         InitializeComponent();
         _existingRecords = existingRecords;
 
+        // Misma lista que los selectores de Configurar
+        QuienRecibeBox.ItemsSource = ConfigStatusHelper.Responsables;
+
         if (existing is not null)
         {
             _editingId = existing.Id;
@@ -37,7 +41,7 @@ public sealed partial class AddModelDialog : ContentDialog
             NumeroParteSmtBox.Text = existing.NumeroParteSmt;
             NumeroParteBeBox.Text = existing.NumeroParteBe;
             NumeroParteTlaBox.Text = existing.NumeroParteTla;
-            SelectComboItem(QuienRecibeBox, existing.QuienRecibeDocumento);
+            QuienRecibeBox.SelectedItem = ConfigStatusHelper.Responsables.FirstOrDefault(r => r == ConfigStatusHelper.NormalizarResponsable(existing.QuienRecibeDocumento));
             FechaSolicitudPicker.Date = new DateTimeOffset(existing.FechaSolicitud);
             QuienMandaBox.Text = existing.QuienMandoDocumento;
 
@@ -85,18 +89,6 @@ public sealed partial class AddModelDialog : ContentDialog
         }
     }
 
-    private static void SelectComboItem(ComboBox combo, string value)
-    {
-        var match = combo.Items
-            .OfType<ComboBoxItem>()
-            .FirstOrDefault(item => string.Equals(item.Content as string, value, StringComparison.Ordinal));
-
-        if (match is not null)
-        {
-            combo.SelectedItem = match;
-        }
-    }
-
     // --- "Es el mismo número que SMT" (BE) ---
 
     private void BeMismoQueSmtCheck_Checked(object sender, RoutedEventArgs e)
@@ -139,7 +131,7 @@ public sealed partial class AddModelDialog : ContentDialog
         var parteSmt = NumeroParteSmtBox.Text?.Trim() ?? string.Empty;
         var parteBe = NumeroParteBeBox.Text?.Trim() ?? string.Empty;
         var parteTla = NumeroParteTlaBox.Text?.Trim() ?? string.Empty;
-        var quienRecibe = (QuienRecibeBox.SelectedItem as ComboBoxItem)?.Content as string ?? string.Empty;
+        var quienRecibe = QuienRecibeBox.SelectedItem as string ?? string.Empty;
 
         // El "número de modelo" ya no se captura aparte: se toma el número de
         // parte de mayor prioridad (SMT > BE > TLA) entre los que se llenaron.
