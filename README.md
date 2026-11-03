@@ -1,90 +1,68 @@
 # Alejandría — Seguimiento de Altas de Modelos
 
-App de escritorio (WinUI 3, Windows 11) que uso para llevar el seguimiento
-de las altas de modelo en iMES: qué modelos entraron, en qué van de su
-configuración de base de datos y de Plataforma iMES, y quién hizo qué.
-Todo corre contra una base SQLite compartida en red, para que se pueda
-usar desde varias computadoras a la vez.
+App de escritorio (WinUI 3, .NET 8) para llevar el seguimiento de las altas
+de modelo en iMES: qué entró, en qué va cada área y quién hizo qué.
+Corre contra una SQLite en la red, así que se usa desde varias PCs a la vez.
 
-## Cómo funciona, de principio a fin
+Alejandría **no escribe en Oracle**: el alta en iMES se hace a mano y aquí
+solo se registra. Lo único que consulta es la API web de iMES.
 
-1. **Llega una solicitud de modelo nuevo** (el formato "BCS Unity System:
-   New model & part number request"). Lo doy de alta en **Altas de
-   Modelos**: nombre, números de parte por área (SMT/BE/TLA — el que
-   corresponda), quién lo mandó, quién lo recibe, y adjunto el PDF de la
-   solicitud ahí mismo.
+## Cómo se usa
 
-2. En **Modelos** aparece automáticamente en cuanto tiene al menos un
-   número de parte. Le doy **Configurar** y ahí capturo, por cada área
-   que tenga:
-   - **Base de datos iMES**: MODELS_PARENTS, MODELS_MASTER,
-     MODELS_SERIALNUMBERSPECS y su Packing.
-   - **Plataforma iMES**: Work Order, Ruta y Línea (estos ya no se
-     escriben a mano — se traen directo de iMES, ver abajo), más Flujo y
-     PartLineBomMaintenance.
-   - **Estado del Documento** (junto al selector de área): Correcto o
-     Pendiente a correcciones — es independiente del avance de la
-     configuración, no bloquea que el modelo llegue a Terminado. Si
-     queda Pendiente a correcciones, en Histórico se habilita un botón
-     "Adjuntar PDF" para subir la versión corregida sin usar "Actualizar".
+1. **Altas de Modelos**: llega la solicitud y se da de alta con nombre,
+   números de parte (SMT / BE / TLA), quién la mandó, quién la recibe y el PDF.
+   Las acciones de cada fila (Editar, Ver/Adjuntar PDF, Reemplazar PDF) están en el menú **⋯**.
+2. **Modelos**: aparecen los pendientes, con los atrasados arriba.
+   Se puede buscar por nombre o número de parte y filtrar por
+   Pendientes · En proceso · Atrasados. La columna **Avance** tiene un punto por paso.
+3. **Configurar** (clic en la fila), por área y en 4 pasos:
+   1. **MODELS_PARENTS**: quién lo dio de alta (o No Aplica).
+   2. **MODELS_MASTER**: el **MODELID** que quedó y quién lo dio de alta.
+   3. **MODELS_SERIALNUMBERSPECS**: serial de ejemplo (a mano o **Extraer del PDF**),
+      plantilla (Tesla o GM) y MODELID → tabla de cómo debe quedar y el **INSERT** para copiar.
+      Luego **Probar en iMES** y quién dio de alta SerialSpecs y Packing.
+   4. **Plataforma iMES**: Work Order, Ruta/Flujo y Línea con **Buscar en iMES**, y PartLineBomMaintenance.
 
-3. Para no capturar a ciegas, hay dos ayudas conectadas a la API real de
-   iMES:
-   - **"Buscar en iMES"**: trae el Work Order, la Ruta y la(s) Línea(s)
-     activas para el número de parte del área que estoy viendo.
-   - **"Probar un serial"**: capturo un serial real (o lo extraigo del
-     PDF adjunto con un clic) y me dice a qué modelo pertenece según
-     iMES — si lo reconoce, ya sé que MODELS_SERIALNUMBERSPECS y su
-     Packing están bien. Quién dio de alta cada tabla se marca aparte,
-     en su selector.
-   - **Vista previa de MODELS_SERIALNUMBERSPECS**: con el mismo serial,
-     eligiendo la plantilla del cliente (Tesla o GM) y el MODELID, muestra
-     cómo queda cada segmento y arma el INSERT listo para copiar.
+   Arriba está el área, el estado del documento, el plazo (5 días hábiles) y lo que falta.
+   Al completar un paso pasa solo al siguiente (se apaga en Ajustes). Se guarda solo a los 2 s.
+4. **Histórico**: cuando todas las áreas quedan Terminadas **y hay PDF**, el modelo pasa aquí
+   y ya no se edita. Si cambia un número de parte se usa **Actualizar** (crea un modelo nuevo
+   copiando lo que no cambió). **Ver detalles** muestra la config guardada.
+5. **Estadísticas**: KPIs, configuraciones por persona y reportes en **Excel** y **PDF**
+   (todo Histórico o los modelos que elijas).
 
-4. En cuanto **todas las áreas de un modelo** quedan Terminadas (y ya
-   tiene su PDF adjunto — sin eso no cuenta como Terminado, aunque todo
-   lo demás esté lleno), el modelo se mueve solo a **Histórico** y deja
-   de poder editarse. Si después cambia un número de parte, no se edita
-   el histórico: se usa el botón **"Actualizar"**, que crea un modelo
-   nuevo copiando lo que no cambió. El botón **"Ver detalles"** muestra
-   de solo lectura la configuración ya guardada de cada área (incluyendo
-   quién la completó) — sin ningún control editable.
+**Estado del documento**: Correcto o Pendiente a correcciones. No frena el avance;
+si queda pendiente, en Histórico sale **Adjuntar PDF** para subir el corregido.
 
-5. Cuando necesito mandar evidencia o revisar el avance general, uso
-   **Estadísticas**: ahí están los KPIs, quién ha hecho cuántas
-   configuraciones, y los botones para exportar **Excel** y **PDF**
-   (general, de todo Histórico, o de los modelos que yo elija). En el
-   PDF, los campos completos se ven como "Terminado" — no muestran el
-   nombre de quién los hizo (eso se consulta desde "Ver detalles" en
-   Histórico).
+### Atajos
+
+| Atajo | Qué hace |
+| --- | --- |
+| Ctrl+N | Añadir modelo (desde cualquier pantalla) |
+| Ctrl+F | Buscar (Modelos e Histórico) |
+| Ctrl+S / Enter | Guardar en Configurar (Enter no guarda si estás en una caja de texto) |
+| Alt+← / Alt+→ | Paso anterior / siguiente |
 
 ## Requisitos
 
-- Windows 11 (o Windows 10 1809+)
-- Visual Studio 2022 (17.9+) con los workloads **.NET Desktop
-  Development** y **Windows App SDK / WinUI application development**
-- .NET 8 SDK
+- Windows 10 1809+ o Windows 11
+- .NET 8 SDK (o más nuevo)
+- Rider o Visual Studio con Windows App SDK
 
 ## Compilar y correr
 
-1. Abrir `Alejandria.sln` en Visual Studio.
-2. Dejar que NuGet restaure los paquetes (Windows App SDK,
-   CommunityToolkit.Mvvm, Microsoft.Data.Sqlite, ClosedXML, PDFsharp-GDI,
-   PdfPig).
-3. Seleccionar plataforma `x64` (WinUI 3 no compila como `AnyCPU`).
-4. F5. La app corre sin empaquetar, no necesita instalación MSIX para
-   desarrollar.
+Abrir `Alejandria.sln`, plataforma **x64** (WinUI 3 no compila en AnyCPU) y correr.
+No necesita MSIX.
 
 ```powershell
-dotnet build Alejandria.sln -c Debug -p:Platform=x64
+dotnet build Alejandria\Alejandria.csproj -c Debug -p:Platform=x64
 ```
 
-Para el instalador y las actualizaciones se usa [Velopack](https://velopack.io),
-ver [Publicar una versión nueva](#publicar-una-versión-nueva-velopack).
+Si sale que no puede copiar `Alejandria.exe`, la app está abierta: ciérrala y vuelve a compilar.
 
-## Base de datos compartida
+## Configuración
 
-`appsettings.json` (junto al .exe) apunta a la ruta de red:
+`appsettings.json` junto al `.exe`:
 
 ```json
 {
@@ -92,53 +70,71 @@ ver [Publicar una versión nueva](#publicar-una-versión-nueva-velopack).
   "ImesApi": {
     "BaseUrl": "https://sqromx-imesweb.ad.one-bcs.com/imes-api/",
     "BearerToken": ""
+  },
+  "Updates": {
+    "Folder": "\\\\sqromx-prfs01\\Departments\\IT\\MES\\Juan Pablo Solis\\Alejandria\\Actualizaciones"
   }
 }
 ```
 
-Tiene que ser la misma ruta en todas las computadoras. La app crea la
-tabla sola la primera vez que se conecta. Un par de cosas a tener en
-cuenta con SQLite sobre red:
+- `DatabasePath`: la misma en todas las PCs. Las tablas y columnas nuevas se crean solas.
+- `ImesApi:BaseUrl`: vacío oculta Buscar en iMES y Probar.
+- `Updates:Folder`: carpeta de Velopack.
 
-- Si dos personas guardan al mismo tiempo, una espera un poco a la otra
-  (ya hay un `busy_timeout` configurado para eso) — con el volumen normal
-  de altas no debería notarse.
-- No abrir el `.db` con DB Browser u otro programa mientras alguien más
-  lo está usando, para no pelearse el bloqueo del archivo.
-- Si la ruta de red no está disponible (VPN apagada, servidor caído), la
-  app avisa en unos segundos en vez de quedarse cargando para siempre.
+Junto a la base viven `Documentos` (PDFs adjuntos) y `Respaldos` (copia diaria, 30 días).
 
-## Una sola instancia por computadora
+**SQLite en red**:
 
-No se puede abrir Alejandría dos veces en la misma computadora — si lo
-intentas, sale un aviso ("Alejandría ya está abierta en esta
-computadora") y la segunda ventana ni se abre. Se controla con un Mutex
-del sistema (`Program.cs`, antes de que arranque cualquier ventana). Si
-alguna vez hace falta permitir varias instancias (por ejemplo, para
-probar dos configuraciones de red en la misma computadora), avísame y lo
-ajusto.
+- Si dos guardan al mismo tiempo, uno espera (busy_timeout de 5 s).
+- No abrir el `.db` con DB Browser mientras alguien lo usa.
+- Sin red o VPN avisa a los 8 s en vez de quedarse cargando.
 
-## Registro de errores
+## Ajustes
 
-`LogService` guarda en esta computadora (`%LOCALAPPDATA%\Alejandria\logs\`,
-un archivo `.log` por día, últimos 30 días) los errores que le pasen a la
-app — desde fallas al guardar/consultar la base de datos hasta
-excepciones que ni la propia app supo manejar (enganchado en
-`App.xaml.cs` y, para hilos/tareas aparte, en `Program.cs`). En Ajustes
-hay dos botones para revisarlo sin salir de la app: **"Ver registro"**
-(los últimos 5 días, en una ventana) y **"Abrir carpeta"** (para verlo
-directo en el Explorador, o mandarlo a alguien si hace falta ayuda para
-diagnosticar algo).
+- **Tema**: claro, oscuro o el de Windows.
+- **Notificaciones**: avisos al guardar.
+- **Buscar en iMES automáticamente**: al entrar a un área sin Work Order/Ruta/Línea.
+- **Avanzar de paso automáticamente**: en Configurar.
+- **Actualizaciones**: Buscar actualización y Ver notas de versión.
+- **Registro de errores**: Ver registro (últimos 5 días) y Abrir carpeta.
+
+Las preferencias son de cada PC: `%LOCALAPPDATA%\Alejandria\preferences.json`.
+
+## Integración con iMES
+
+Con la sesión de Windows (no pide contraseña). Si algún día dan un token, va en `ImesApi:BearerToken`.
+
+- **Buscar en iMES**: `GET /imes/getWorkOrderForNonLine?Ipn={número de parte}`.
+  El área sale del campo `LINE`, no del nombre del WO. Si hay varias líneas del área se juntan con coma.
+  Work Order, Ruta y Línea son de solo lectura; si no encuentra nada se puede
+  **Volver a intentar** o **Ingresar manual**.
+- **Probar en iMES**: `GET /imes/SMT/QRO/GetModelDataFromSn?serialNumber={serial}`.
+  Muestra el payload completo.
+- **Extraer del PDF**: busca "Laser Serial Number real example" en el PDF adjunto;
+  si trae varios (FG, PCBA, Clock spring...) deja elegir.
+
+## Plantillas de MODELS_SERIALNUMBERSPECS
+
+Están en `Services/SerialSpecPlantillas.cs`. Cada una tiene la vista previa (en C#) y el INSERT.
+
+- **Tesla**: posiciones fijas con `SUBSTR` (mínimo 28 caracteres).
+- **GM**: código 2D, se parte con la misma regex que en Oracle.
+
+El INSERT toma `MAX(ID)` y suma 1, 2, 3… por fila. **Siempre revisarlo antes de correrlo.**
+
+## Otros
+
+- **Una sola instancia**: no deja abrirla dos veces en la misma PC (Mutex en `Program.cs`).
+- **Log de errores**: `%LOCALAPPDATA%\Alejandria\logs\`, un archivo por día, 30 días.
+  Las rutas de red se tapan antes de guardar.
 
 ## Actualizaciones
 
-En Ajustes, **Buscar actualización** revisa la carpeta de red de
-`Updates:Folder` (`appsettings.json`). Si hay versión nueva la descarga,
+En Ajustes, **Buscar actualización** revisa `Updates:Folder`. Si hay versión nueva la descarga,
 la instala y abre la app otra vez. Velopack instala por usuario, no pide admin.
 
-**Ver notas de versión** muestra el `CHANGELOG.md`. Después de actualizar,
-las notas de esa versión salen solas una vez (la última vista se guarda en
-`preferences.json` de cada PC).
+**Ver notas de versión** muestra el `CHANGELOG.md`. Después de actualizar, las notas
+de esa versión salen solas una vez.
 
 ## Publicar una versión nueva (Velopack)
 
@@ -213,66 +209,34 @@ En una PC que ya la tenga: Ajustes → **Buscar actualización**.
 código SmartScreen puede avisar la primera vez: **Más información →
 Ejecutar de todas formas**.
 
-## Integración con iMES
-
-- **"Buscar en iMES"** llama a
-  `GET /imes/getWorkOrderForNonLine?Ipn={número de parte}`. Un mismo
-  número de parte puede tener varios work orders activos (uno por línea
-  física), y el área a la que pertenece cada uno se decide por el campo
-  `LINE` de la respuesta, no por el nombre del work order (porque ese
-  estándar de nombres va cambiando). Cuando hay varias líneas de la misma
-  área, se juntan en el campo Línea separadas por coma.
-- Work Order, Ruta y Línea normalmente son de solo lectura (se llenan con
-  "Buscar en iMES", para que no se desincronicen de lo que ya está
-  registrado ahí). Si esa búsqueda no encuentra nada (por ejemplo, el
-  Work Order todavía no está activo en iMES), sale un aviso con dos
-  opciones: **"Volver a intentar"** (repite la búsqueda) o **"Ingresar
-  manual"** — solo con esta última se destraban los 3 campos para
-  capturarlos a mano como respaldo. Se vuelven a bloquear en cuanto una
-  búsqueda sí encuentra algo, o al cambiar de área.
-- **"Probar un serial"** llama a
-  `GET /imes/SMT/QRO/GetModelDataFromSn?serialNumber={serial}`. El botón
-  "Extraer del PDF adjunto" saca el serial directo del PDF de solicitud
-  (sección "Laser Serial Number real example") en vez de tener que
-  copiarlo a mano — ese campo a veces trae más de un serial (FG, PCBA,
-  Clock spring...), así que si encuentra varios te deja elegir cuál
-  probar.
-- La autenticación es integrada de Windows (misma sesión con la que ya
-  se entra a iMES sin pedir contraseña). Si algún día dan una cuenta de
-  servicio con token fijo, se pone en `ImesApi:BearerToken`.
-- Si `ImesApi:BaseUrl` está vacío, los botones que dependen de esto
-  simplemente no aparecen.
-
-## Estructura del proyecto
+## Estructura
 
 ```
 Alejandria/
-├── Models/            ModelRecord, DetalleConfiguracion, y los DTO de iMES (ImesWorkOrder, ImesModeloPorSerial)
+├── Models/        ModelRecord, DetalleConfiguracion, SpecPreviewFila y los DTO de iMES
 ├── Services/
-│   ├── ModelDatabaseService.cs      CRUD sobre SQLite
-│   ├── ConfigStatusHelper.cs        Reglas de estatus (Pendiente/En Proceso/Terminado/Bloqueado)
-│   ├── ImesApiService.cs            Cliente de la API de iMES
-│   ├── PdfSerialExtractorService.cs Saca seriales de un PDF adjunto (PdfPig)
-│   ├── DocumentAttachmentService.cs Copia/abre el PDF adjunto por modelo
-│   ├── ExcelExportService.cs        Reporte Excel (ClosedXML)
-│   ├── PdfReportService.cs          Reporte PDF (PDFsharp-GDI)
-│   └── BusinessDayHelper.cs         Plazo de 5 días hábiles y días de retraso
-├── ViewModels/         Uno por pantalla: AltasModelos, Modelos, Historico, ModelConfig, Estadisticas
-├── Views/               Las páginas y diálogos (AddModelDialog, UpdateModelDialog)
-├── Controls/             StatusBadge
-├── Converters/           BoolToVisibility, StatusToBrush, KpiTonoToBrush, CountToVisibility
-└── Styles/                Paleta, tipografía y estilos (ColorsAndBrushes, CardStyles, TitleBarStyles)
+│   ├── ModelDatabaseService.cs       SQLite (CRUD y migraciones)
+│   ├── ConfigStatusHelper.cs         Reglas de estatus y de los 4 pasos
+│   ├── SerialSpecPlantillas.cs       Plantillas Tesla / GM
+│   ├── ImesApiService.cs             API de iMES
+│   ├── PdfSerialExtractorService.cs  Seriales del PDF adjunto (PdfPig)
+│   ├── DocumentAttachmentService.cs  PDFs adjuntos
+│   ├── ExcelExportService.cs         Reporte Excel (ClosedXML)
+│   ├── PdfReportService.cs           Reporte PDF (PDFsharp)
+│   ├── DatabaseBackupService.cs      Respaldo diario
+│   ├── UpdateService.cs              Velopack
+│   ├── ToastService.cs               Avisos abajo de la ventana
+│   └── LogService.cs                 Log de errores
+├── ViewModels/    Uno por pantalla
+├── Views/         Páginas y diálogos
+├── Controls/      StatusBadge, EmptyState
+├── Converters/
+└── Styles/        Paleta (Fluent + Atlassian), tarjetas y barra de título
 ```
 
 ## Problemas conocidos
 
-- **Ventana en negro al abrir**: no debería pasar — se quitó Mica/Acrylic
-  por completo, el fondo es sólido. Si vuelve a salir negra, probablemente
-  sea otra cosa.
-- **Se queda cargando sin avanzar**: revisa la VPN/red de la empresa —
-  si la ruta compartida no es alcanzable, la conexión tarda en fallar. Ya
-  hay un límite de 8 segundos para que avise en vez de trabarse.
-- **PdfPig no compila / versión no encontrada**: revisa en NuGet.org cuál
-  es la versión más reciente y actualízala en el `.csproj` — la API que
-  se usa (`PdfDocument.Open`, `.GetPages()...Text`) es estable entre
-  versiones.
+- **Se queda cargando**: revisar VPN/red, la ruta compartida no responde.
+- **No copia `Alejandria.exe` al compilar**: la app está abierta.
+- **`'X' no existe en el contexto actual` en algo que sí existe**: revisar con `git status`
+  que ningún archivo se haya modificado por fuera (ya pasó con un rename de otro proyecto).
