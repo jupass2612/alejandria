@@ -45,10 +45,17 @@
          sacar de ahí el "Laser Serial Number real example") se usa PdfPig,
          que sí soporta extracción de texto. -->
     <PackageReference Include="PdfPig" Version="0.1.9" />
+    <!-- SSH/SFTP hacia servidores Linux -->
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <!-- Empaquetado + actualizaciones automáticas. Reemplaza el instalador
          de Inno Setup y el mecanismo de "Buscar actualización" hecho a
          mano (ver Installer/LEEME-VELOPACK.md). -->
     <PackageReference Include="Velopack" Version="0.0.1053" />
+    <!-- Empaquetado de Velopack desde el build (solo compilación, no va en la app) -->
+    <PackageReference Include="Velopack.Build" Version="0.0.1369-g1d5c984">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
