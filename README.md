@@ -79,10 +79,8 @@ usar desde varias computadoras a la vez.
 dotnet build Alejandria.sln -c Debug -p:Platform=x64
 ```
 
-Para generar un instalador de verdad (para repartir a otras computadoras
-sin que necesiten Visual Studio ni .NET instalado) se usa
-[Velopack](https://velopack.io) — el paso a paso está en
-`Installer/LEEME-VELOPACK.md`.
+Para el instalador y las actualizaciones se usa [Velopack](https://velopack.io),
+ver [Publicar una versión nueva](#publicar-una-versión-nueva-velopack).
 
 ## Base de datos compartida
 
@@ -134,22 +132,86 @@ diagnosticar algo).
 
 ## Actualizaciones
 
-En Ajustes hay un botón **"Buscar actualización"**. Revisa una carpeta de
-red (`Updates:Folder` en `appsettings.json` — vive en la misma unidad
-compartida que ya se usa para la base de datos) por una versión más nueva,
-publicada ahí con Velopack. Si encuentra una, pregunta si descargarla, y
-al terminar pregunta si reiniciar para aplicarla. Como Velopack instala
-por usuario (no en Archivos de programa), **no pide permisos de
-administrador** — a diferencia del instalador anterior. El paso a paso de
-cómo publicar cada versión nueva ahí está en
-`Installer/LEEME-VELOPACK.md`.
+En Ajustes, **Buscar actualización** revisa la carpeta de red de
+`Updates:Folder` (`appsettings.json`). Si hay versión nueva la descarga,
+la instala y abre la app otra vez. Velopack instala por usuario, no pide admin.
 
-Junto a ese botón hay otro, **"Ver notas de versión"**, que muestra el
-historial completo de cambios (`CHANGELOG.md`). Además, cuando Alejandría
-se abre por primera vez después de haberse actualizado, aparece sola una
-ventana con las notas de esa versión específica — se guarda la última
-versión ya vista en `preferences.json` (local a cada computadora), así
-que solo sale una vez por actualización, no en cada apertura.
+**Ver notas de versión** muestra el `CHANGELOG.md`. Después de actualizar,
+las notas de esa versión salen solas una vez (la última vista se guarda en
+`preferences.json` de cada PC).
+
+## Publicar una versión nueva (Velopack)
+
+Todo desde la raíz del repo (`C:\Users\solisj\alejandria`).
+
+**Qué versión ponerle** (`MAJOR.MINOR.PATCH`):
+
+- **PATCH**: arreglos chicos (un bug, un texto, un detalle visual).
+- **MINOR**: algo nuevo o un cambio que se nota.
+- **MAJOR**: cambios grandes de fondo.
+
+Lo que es solo de comentarios o README no sube versión.
+
+**Una sola vez en la PC**, instalar `vpk` (de preferencia la misma versión
+que el paquete `Velopack` del `.csproj`):
+
+```powershell
+dotnet tool install -g vpk --version 0.0.1053
+```
+
+### 1. Subir la versión
+
+- `Alejandria/Alejandria.csproj` → cambiar `<Version>`.
+- `Alejandria/CHANGELOG.md` → agregar arriba `## X.Y.Z` con la lista de cambios.
+
+### 2. Commit y tag
+
+```powershell
+git add -A
+git commit -m "Alejandría X.Y.Z: <qué cambió>"
+git tag -a vX.Y.Z -m "Alejandría X.Y.Z"
+git push origin main --tags
+```
+
+### 3. Publicar
+
+Con Alejandría cerrada (si está abierta no deja copiar el `.exe`):
+
+```powershell
+dotnet publish Alejandria\Alejandria.csproj -c Release -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o Installer\publish
+```
+
+### 4. Empaquetar
+
+```powershell
+vpk pack -u Alejandria -v X.Y.Z -p Installer\publish -e Alejandria.exe -o Installer\Releases
+```
+
+- `-u Alejandria`: id de la app, **nunca cambiarlo**.
+- `-v X.Y.Z`: igual que `<Version>`.
+- No borrar lo de versiones anteriores en `Installer\Releases`, Velopack lo usa para los paquetes delta.
+
+Queda `Alejandria-win-Setup.exe` (instalador para PCs nuevas),
+`Alejandria-win-Portable.zip` y los archivos que leen las instalaciones
+para actualizarse (`.nupkg`, `releases.win.json`, `RELEASES`, `assets.win.json`).
+
+### 5. Subir a la carpeta de red
+
+Copiar **todo** `Installer\Releases` a la carpeta de actualizaciones:
+
+```powershell
+robocopy Installer\Releases "\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones" /E
+```
+
+### 6. Probar
+
+En una PC que ya la tenga: Ajustes → **Buscar actualización**.
+
+**PC nueva**: correr `Alejandria-win-Setup.exe` una vez, no pide admin.
+
+`Installer\publish` e `Installer\Releases` no se suben a git. Sin firma de
+código SmartScreen puede avisar la primera vez: **Más información →
+Ejecutar de todas formas**.
 
 ## Integración con iMES
 
