@@ -7,9 +7,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Alejandria.Views;
 
-// Diálogo de solo lectura para "Ver detalles" en Histórico — muestra la
-// configuración que ya quedó guardada por área (el resultado de "Buscar
-// en iMES" y de confirmar el serial), sin ningún control editable.
+// Ver detalles en Histórico, solo lectura
 public sealed partial class VerDetallesDialog : ContentDialog
 {
     public VerDetallesDialog(ModelRecord modelo, IReadOnlyList<DetalleConfiguracion> detalles)

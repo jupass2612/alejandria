@@ -17,7 +17,7 @@ public sealed partial class AltasModelosPage : Page
         Loaded += AltasModelosPage_Loaded;
     }
 
-    // Ctrl+N puede pedir el diálogo antes de que la página termine de cargar
+    // Ctrl+N puede llegar antes de que cargue la página
     private bool _abrirAñadirAlCargar;
     private bool _cargada;
 

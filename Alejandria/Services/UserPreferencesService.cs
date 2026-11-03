@@ -2,30 +2,23 @@ using System.Text.Json;
 
 namespace Alejandria.Services;
 
-// Preferencias locales de esta computadora (tema, confirmaciones), no
-// compartidas por red. Se guardan en %LOCALAPPDATA%\Alejandria\preferences.json.
+// Preferencias de esta PC en %LOCALAPPDATA%\Alejandria\preferences.json
 public class UserPreferencesService
 {
     private readonly string _path;
 
-    // "Default" (sigue a Windows), "Light" o "Dark".
+    // Default (Windows), Light o Dark
     public string Theme { get; private set; } = "Default";
 
     public bool NotificationsEnabled { get; private set; } = true;
 
-    // Si "Buscar en iMES" se dispara solo al entrar a un área con Work
-    // Order/Ruta/Línea vacíos, en vez de tener que darle clic cada vez.
-    // Prendido por default; se puede apagar para quien tenga una
-    // conexión lenta y prefiera decidir cuándo consultar.
+    // Buscar en iMES solo al entrar a un área sin datos
     public bool BusquedaImesAutomatica { get; private set; } = true;
 
-    // En Configurar modelo, pasa solo al siguiente paso cuando se completa uno
+    // Pasar solo al siguiente paso en Configurar
     public bool AvanceAutomaticoPasos { get; private set; } = true;
 
-    // Última versión que ya vio el "qué hay de nuevo" al abrir — vacío si
-    // nunca se ha registrado (primera instalación real, o la primera vez
-    // que corre una versión con este seguimiento). En ambos casos se
-    // muestran las notas de la versión actual una vez.
+    // Última versión que vio el qué hay de nuevo; vacío también lo muestra
     public string LastSeenVersion { get; private set; } = string.Empty;
 
     public UserPreferencesService()
@@ -74,8 +67,7 @@ public class UserPreferencesService
         }
         catch (Exception ex)
         {
-            // Archivo corrupto o ilegible: seguimos con los valores por defecto
-            // en vez de tronar el arranque de la app por una preferencia.
+            // Si el archivo está dañado, se queda con los valores por defecto
             LogService.LogError("UserPreferencesService.Load", ex);
         }
     }
@@ -89,9 +81,7 @@ public class UserPreferencesService
         GuardarArchivo();
     }
 
-    // Se llama aparte de Save (tema/notificaciones) porque esto no lo
-    // decide el usuario en Ajustes — lo actualiza la app sola al mostrar
-    // (o decidir no mostrar) el "qué hay de nuevo".
+    // Aparte de Save porque lo pone la app, no el usuario
     public void MarcarVersionVista(string version)
     {
         LastSeenVersion = version;

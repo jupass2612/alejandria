@@ -231,7 +231,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Quién ha hecho las configuraciones -->
+                <!-- Configuraciones por responsable -->
                 <Border
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"

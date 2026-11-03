@@ -3,18 +3,8 @@ using Velopack;
 
 namespace Alejandria;
 
-// WinUI 3 normalmente genera su propio Main — hace falta uno propio para
-// poder correr VelopackApp.Build().Run() antes de que arranque la UI (así
-// es como Velopack detecta si lo están abriendo por un instalar/actualizar/
-// desinstalar en vez de un uso normal). Requiere DISABLE_XAML_GENERATED_MAIN
-// en el .csproj para que el generador no cree otro Main que choque con este.
-//
-// También aquí se controla que no se pueda abrir una segunda instancia:
-// un Mutex con nombre fijo ("Global\" para que aplique a toda la
-// computadora, no solo a la sesión de Windows actual) — la primera
-// instancia lo toma y lo mantiene mientras esté abierta; si otra
-// instancia lo encuentra ya tomado, avisa y se cierra sin llegar a abrir
-// ninguna ventana.
+// Main propio para correr VelopackApp antes de la UI (necesita DISABLE_XAML_GENERATED_MAIN).
+// También evita abrir la app dos veces con un Mutex global
 public static class Program
 {
     private const string NombreMutexInstanciaUnica = @"Global\Alejandria_BCS_AIS_SingleInstance";
@@ -32,9 +22,7 @@ public static class Program
     {
         VelopackApp.Build().Run();
 
-        // El Mutex se queda dentro del "using" hasta que Main termina —
-        // como Application.Start() bloquea mientras la app está abierta,
-        // eso significa que se libera justo al cerrarla, no antes.
+        // El Mutex se libera hasta que se cierra la app
         System.Threading.Mutex mutexInstanciaUnica;
         bool esInstanciaNueva;
 
@@ -44,11 +32,7 @@ public static class Program
         }
         catch (UnauthorizedAccessException)
         {
-            // Sin permiso para crear un Mutex "Global\" (pasa en algunos
-            // entornos de Escritorio Remoto con políticas restrictivas) —
-            // se usa uno de sesión en vez de tronar. Sigue evitando dos
-            // instancias para el mismo usuario, aunque no para toda la
-            // computadora si hay varias sesiones activas.
+            // Sin permiso para el Mutex global (pasa en Escritorio Remoto), se usa uno de sesión
             mutexInstanciaUnica = new System.Threading.Mutex(true, NombreMutexInstanciaUnica.Replace(@"Global\", string.Empty), out esInstanciaNueva);
         }
 
@@ -60,9 +44,7 @@ public static class Program
             return;
         }
 
-        // Estos dos capturan errores que no pasan por el manejador de
-        // App.xaml.cs (hilos aparte, tareas async sin esperar) — sin esto,
-        // esos errores no quedarían registrados en ningún lado.
+        // Errores de otros hilos y tareas sin await que no llegan a App.xaml.cs
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             if (e.ExceptionObject is Exception ex)

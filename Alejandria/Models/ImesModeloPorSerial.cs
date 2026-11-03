@@ -2,9 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Alejandria.Models;
 
-// Lo que regresa iMES al buscar un serial (GetModelDataFromSn) — a qué
-// modelo pertenece. Solo se mapean los campos que se muestran; el JSON
-// real trae más.
+// Respuesta de GetModelDataFromSn, solo los campos que se usan
 public class ImesModeloPorSerial
 {
     [JsonPropertyName("ParentModelName")]

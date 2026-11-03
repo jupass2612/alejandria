@@ -29,7 +29,7 @@ public sealed partial class ModelosPage : Page
         }
     }
 
-    // Clic en cualquier parte de la fila también abre Configurar
+    // Clic en la fila abre Configurar
     private void ModelosList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is ModeloResumenItem item)

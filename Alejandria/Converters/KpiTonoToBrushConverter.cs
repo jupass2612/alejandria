@@ -4,11 +4,7 @@ using Windows.UI;
 
 namespace Alejandria.Converters;
 
-// Convierte el "tono" de un KPI (Success/Warning/Pendiente/Danger) en su
-// color: verde/naranja/amarillo/rojo. Colores fijos, no cambian con el
-// tema (resolver un ThemeResource por nombre desde código no funciona
-// bien). Siempre regresa un Brush concreto, nunca UnsetValue — x:Bind
-// truena con InvalidCastException si le llega eso.
+// Tono del KPI a color fijo; nunca regresa UnsetValue porque x:Bind truena
 public sealed class KpiTonoToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
@@ -21,7 +17,7 @@ public sealed class KpiTonoToBrushConverter : IValueConverter
             "Warning" => "#F59E0B",
             "Pendiente" => "#EAB308",
             "Danger" => "#EF4444",
-            _ => "#64748B" // No debería mostrarse (ver comentario de la clase), pero nunca truena.
+            _ => "#64748B" // No debería pasar
         };
 
         var (r, g, b) = ParseRgb(hex);

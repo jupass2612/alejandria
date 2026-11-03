@@ -43,7 +43,7 @@ public sealed partial class EstadisticasPage : Page
         }
         catch (Exception)
         {
-            // El ícono en los botones es decorativo — si falla, los botones siguen funcionando.
+            // El ícono es decorativo
         }
     }
 
@@ -66,7 +66,7 @@ public sealed partial class EstadisticasPage : Page
 
         ViewModel.AgregarModeloSeleccionado(modelo);
 
-        // Limpia la búsqueda tras agregar, para el siguiente modelo.
+        // Limpia para el siguiente
         BusquedaModeloBox.Text = string.Empty;
     }
 
@@ -78,7 +78,7 @@ public sealed partial class EstadisticasPage : Page
         }
     }
 
-    // Valida que haya al menos un modelo elegido antes de abrir el diálogo de guardar.
+    // Al menos un modelo elegido
     private bool ValidarAlcance(bool reporteGeneral)
     {
         if (reporteGeneral || ViewModel.ModelosSeleccionados.Count > 0)
@@ -161,7 +161,7 @@ public sealed partial class EstadisticasPage : Page
         ReportInfoBar.IsOpen = ok;
     }
 
-    // Abre el reporte recién generado con el programa predeterminado.
+    // Abre el reporte
     private void AbrirReporteButton_Click(object sender, RoutedEventArgs e)
     {
         if (string.IsNullOrEmpty(ViewModel.UltimoReportePath))

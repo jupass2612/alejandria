@@ -5,7 +5,7 @@ using Windows.UI;
 
 namespace Alejandria.Converters;
 
-// Convierte un estatus en el color de fondo de su badge.
+// Estatus a color de badge
 public sealed class StatusToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)

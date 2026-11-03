@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Estado vacío o de carga, igual en todas las pantallas -->
+    <!-- Estado vacío o de carga -->
     <StackPanel
         HorizontalAlignment="Center"
         VerticalAlignment="Center"

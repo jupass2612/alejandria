@@ -3,13 +3,12 @@ using Alejandria.Services;
 
 namespace Alejandria;
 
-// Application entry point.
+// Arranque de la app
 public partial class App : Application
 {
     private Window? _window;
 
-    // Referencia a la ventana principal — FilePickerHelper la usa para
-    // el HWND que necesita FileSavePicker.
+    // La usa FilePickerHelper para sacar el HWND
     public static Window? MainWindow { get; private set; }
 
     public App()
@@ -18,10 +17,7 @@ public partial class App : Application
         UnhandledException += App_UnhandledException;
     }
 
-    // No se marca e.Handled = true a propósito: si de verdad no se pudo
-    // manejar en su lugar, es más seguro dejar que la app se cierre que
-    // seguir en un estado que ya no se sabe si quedó bien — pero al menos
-    // queda registrado para poder revisarlo después.
+    // No se marca Handled: mejor que se cierre a que siga en mal estado, pero queda en el log
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         LogService.LogError("UnhandledException", e.Exception);

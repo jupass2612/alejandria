@@ -1,9 +1,6 @@
 namespace Alejandria.Services;
 
-// Registro de errores de la app en archivos de texto locales (por
-// computadora, no se comparte por red) — uno por día, en
-// %LOCALAPPDATA%\Alejandria\logs\. Se guardan los últimos 30 días y los
-// más viejos se borran solos.
+// Log de errores local, uno por día en %LOCALAPPDATA%\Alejandria\logs, 30 días
 public static class LogService
 {
     private static readonly string CarpetaLogs = Path.Combine(
@@ -11,11 +8,7 @@ public static class LogService
 
     private static readonly object Candado = new();
 
-    // Las excepciones de .NET (IOException, UnauthorizedAccessException...)
-    // suelen traer la ruta completa metida en el mensaje — como puede ser
-    // una ruta de red con nombres de carpetas personales, se tapa antes de
-    // guardarla. El tipo de excepción y el resto del mensaje se quedan
-    // igual de útiles para diagnosticar; solo la ruta en sí desaparece.
+    // Tapa rutas de red que .NET mete en los mensajes
     private static readonly System.Text.RegularExpressions.Regex RutaDeRedRegex = new(
         @"\\\\[^'""\r\n]+",
         System.Text.RegularExpressions.RegexOptions.Compiled);
@@ -28,8 +21,7 @@ public static class LogService
         }
         catch (Exception)
         {
-            // Si ni la carpeta se puede crear, LogError/LogInfo lo intentan
-            // de nuevo y fallan en silencio — no debe tronar el arranque.
+            // Si no se puede crear la carpeta, el log falla en silencio
         }
     }
 
@@ -37,14 +29,10 @@ public static class LogService
 
     private static string RutaArchivoDeHoy => Path.Combine(CarpetaLogs, $"{DateTime.Now:yyyy-MM-dd}.log");
 
-    // Tapa cualquier ruta de red en un texto — para usarse también en los
-    // mensajes de error que se muestran en pantalla, no solo en el
-    // registro, ya que las excepciones de .NET a veces meten la ruta
-    // completa en su Message.
+    // Tapa rutas de red también en los mensajes de pantalla
     public static string Redactar(string texto) => RutaDeRedRegex.Replace(texto, "[ruta de red]");
 
-    // "Dónde pasó" (nombre del método/pantalla) + la excepción completa,
-    // con su stack trace, para poder ubicar el problema después.
+    // Contexto + excepción completa con stack trace
     public static void LogError(string contexto, Exception ex)
     {
         var mensaje = $"{contexto}\n{ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}";
@@ -69,8 +57,7 @@ public static class LogService
         }
         catch (Exception)
         {
-            // Si ni el registro de errores puede escribir, se deja pasar —
-            // no debe tronar la app por esto.
+            // Si el log no puede escribir, se deja pasar
         }
     }
 
@@ -86,8 +73,7 @@ public static class LogService
         }
     }
 
-    // Los últimos N días de logs juntos, más recientes primero — para
-    // mostrarlos en el botón "Ver registro de errores" de Ajustes.
+    // Últimos días de log, más recientes primero
     public static string LeerRecientes(int dias = 5)
     {
         if (!Directory.Exists(CarpetaLogs))

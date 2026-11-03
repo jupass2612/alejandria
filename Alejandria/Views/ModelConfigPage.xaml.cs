@@ -16,13 +16,10 @@ public sealed partial class ModelConfigPage : Page
     private bool _isSettingAreaProgrammatically;
     private bool _isPopulatingFields;
 
-    // Guarda solo, 2 segundos después del último cambio — para no
-    // depender de acordarse del botón. Se reinicia con cada campo que
-    // cambie; "Guardar configuración" sigue ahí para quien prefiera
-    // guardar de una vez.
+    // Autoguardado 2 s después del último cambio
     private readonly DispatcherTimer _autoguardadoTimer = new() { Interval = TimeSpan.FromSeconds(2) };
 
-    // Al completar un paso, espera un momento y pasa al siguiente
+    // Avance automático al completar un paso
     private readonly DispatcherTimer _avanceTimer = new() { Interval = TimeSpan.FromMilliseconds(1500) };
     private int _pasoPorAvanzar;
 
@@ -93,11 +90,7 @@ public sealed partial class ModelConfigPage : Page
         await BuscarEnImesAutomaticoSiAplicaAsync();
     }
 
-    // Si está prendido en Ajustes y el área todavía no tiene Work
-    // Order/Ruta/Línea capturados, busca sola en iMES sin que haga falta
-    // darle clic — pero si no encuentra nada, no muestra el diálogo de
-    // "reintentar / ingresar manual" (eso queda para cuando el usuario
-    // le da clic él mismo a "Buscar en iMES"), solo el aviso normal.
+    // Busca sola en iMES si está prendido y no hay datos; si no encuentra, solo avisa
     private async Task BuscarEnImesAutomaticoSiAplicaAsync()
     {
         if (!_preferences.BusquedaImesAutomatica)
@@ -124,8 +117,7 @@ public sealed partial class ModelConfigPage : Page
         }
     }
 
-    // Refleja los valores cargados en los controles. Es manual (no binding)
-    // para controlar cuándo se disparan los recálculos de estatus.
+    // Pasa el detalle a los controles a mano para controlar los recálculos
     private void PopulateFieldsFromDetalle()
     {
         _isPopulatingFields = true;
@@ -176,7 +168,7 @@ public sealed partial class ModelConfigPage : Page
         }
     }
 
-    // Si el combo terminó su paso, programa pasar al siguiente
+    // Si el combo completó su paso, programa el avance
     private void ProgramarAvanceSiSeCompleto(string nombreCombo)
     {
         _avanceTimer.Stop();
@@ -215,7 +207,7 @@ public sealed partial class ModelConfigPage : Page
     {
         _avanceTimer.Stop();
 
-        // Solo si sigue en el mismo paso (no se movió a mano)
+        // Solo si no se movió a mano
         if (ViewModel.PasoActual == _pasoPorAvanzar)
         {
             IrAPaso(_pasoPorAvanzar + 1);
@@ -224,7 +216,7 @@ public sealed partial class ModelConfigPage : Page
 
     private void ModelIdBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        // Al cargar el área también cambia, ahí no hay que guardar
+        // Al cargar también cambia, ahí no se guarda
         if (!ViewModel.IsLoading && !_isPopulatingFields)
         {
             ReiniciarAutoguardado();
@@ -267,7 +259,7 @@ public sealed partial class ModelConfigPage : Page
         await GuardarConfiguracionAsync();
     }
 
-    // Enter guarda igual que el botón, pero no si se está escribiendo en una caja de texto
+    // Enter guarda, menos si se está escribiendo en un TextBox
     private async void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != Windows.System.VirtualKey.Enter || e.OriginalSource is TextBox)
@@ -338,24 +330,19 @@ public sealed partial class ModelConfigPage : Page
 
     private async void BuscarEnImesButton_Click(object sender, RoutedEventArgs e)
     {
-        // Clic manual = quiere ver el dato más reciente, no lo que quedó
-        // en caché de una consulta automática de hace un momento.
+        // Clic manual: sin caché
         ImesApiService.LimpiarCache();
         await BuscarEnImesConReintentoAsync();
     }
 
-    // Busca en iMES; si no encuentra nada, pregunta si reintentar o
-    // capturar a mano (solo ahí se destraban los campos) en vez de
-    // destrabarlos solo. "Volver a intentar" repite esto mismo.
+    // Si no encuentra, pregunta si reintentar o capturar a mano
     private async Task BuscarEnImesConReintentoAsync()
     {
         var candidatos = await ViewModel.BuscarEnImesAsync();
 
         if (candidatos.Count > 0)
         {
-            // Con el estándar nuevo de nombres de Work Order, varias líneas
-            // físicas de la misma área comparten el mismo Work Order — así
-            // que ya no hay que elegir una, se juntan todas (ver AplicarWorkOrdersImes).
+            // Varias líneas comparten WO, se juntan todas
             ViewModel.AplicarWorkOrdersImes(candidatos);
             PopulateFieldsFromDetalle();
             ToastService.Mostrar(ViewModel.SuccessMessage);
@@ -389,15 +376,13 @@ public sealed partial class ModelConfigPage : Page
     {
         await ViewModel.ProbarSerialAsync();
 
-        // El Severity no se puede enlazar directo desde un bool sin un
-        // converter propio para esto solo — más simple ponerlo aquí justo
-        // después de que la respuesta ya está lista.
+        // Severity no se enlaza desde un bool, se pone aquí
         ResultadoSerialInfoBar.Severity = ViewModel.ResultadoSerialEncontrado
             ? InfoBarSeverity.Success
             : InfoBarSeverity.Warning;
     }
 
-    // Solo llena el campo con el serial del PDF, no lo prueba
+    // Solo llena el serial del PDF, no lo prueba
     private async void ExtraerSerialDelPdfButton_Click(object sender, RoutedEventArgs e)
     {
         var candidatos = ViewModel.ExtraerCandidatosSerialDelPdf();
@@ -412,12 +397,12 @@ public sealed partial class ModelConfigPage : Page
 
         if (elegido is not null)
         {
-            // Se pone directo en el ViewModel para no depender del foco del TextBox
+            // Directo al ViewModel para no depender del foco
             ViewModel.SerialPrueba = elegido;
         }
     }
 
-    // Si el PDF trae varios seriales se elige cuál usar
+    // Si hay varios seriales se elige uno
     private async Task<string?> ElegirSerialDelPdfAsync(List<SerialCandidato> candidatos)
     {
         string? seleccionado = null;
@@ -484,7 +469,7 @@ public sealed partial class ModelConfigPage : Page
 
     private void SiguienteButton_Click(object sender, RoutedEventArgs e) => IrAPaso(ViewModel.PasoActual + 1);
 
-    // Cambia de paso y regresa arriba para que se vea desde el inicio
+    // Cambia de paso y sube el scroll
     private void IrAPaso(int paso)
     {
         _avanceTimer.Stop();

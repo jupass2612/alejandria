@@ -11,17 +11,13 @@ public class ResultadoBusquedaActualizacion
     public string? Error { get; init; }
 }
 
-// Revisa/descarga/aplica actualizaciones con Velopack, usando la misma
-// carpeta de red que ya se usa para la base de datos como canal de
-// actualizaciones — sin servidor propio ni internet. Reemplaza el
-// mecanismo anterior (version.txt + AlejandriaSetup.exe a mano).
+// Actualizaciones con Velopack desde la carpeta de red, sin servidor ni internet
 public static class UpdateService
 {
     private static UpdateManager CrearManager(string carpetaActualizaciones) =>
         new(new SimpleFileSource(new DirectoryInfo(carpetaActualizaciones)));
 
-    // Antes de instalar por primera vez con Velopack (ej. corriendo desde
-    // Visual Studio), no hay versión real que reportar.
+    // Sin instalar con Velopack (corriendo desde el IDE) no hay versión
     public static string VersionActualTexto(string carpetaActualizaciones)
     {
         try
@@ -96,9 +92,7 @@ public static class UpdateService
         }
     }
 
-    // Cierra Alejandría, aplica la actualización ya descargada, y la
-    // vuelve a abrir sola — Velopack se encarga de todo eso, no hace
-    // falta relanzar el proceso a mano como antes.
+    // Cierra, aplica la actualización y abre otra vez
     public static void InstalarYReiniciar(string carpetaActualizaciones, UpdateInfo info)
     {
         var mgr = CrearManager(carpetaActualizaciones);

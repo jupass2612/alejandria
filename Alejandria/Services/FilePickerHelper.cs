@@ -5,11 +5,10 @@ using WinRT.Interop;
 
 namespace Alejandria.Services;
 
-// Diálogos nativos de guardar/abrir archivo. En WinUI 3 de escritorio el
-// picker necesita el HWND de la ventana, por eso se inicializa antes de mostrarlo.
+// Diálogos de guardar/abrir; en WinUI 3 necesitan el HWND
 public static class FilePickerHelper
 {
-    // Devuelve la ruta elegida, o null si se canceló.
+    // Ruta elegida o null
     public static async Task<string?> PickSaveFileAsync(string suggestedFileName, string fileTypeDescription, string extension)
     {
         if (App.MainWindow is null)
@@ -31,7 +30,7 @@ public static class FilePickerHelper
         return file?.Path;
     }
 
-    // Devuelve la ruta elegida, o null si se canceló.
+    // Ruta elegida o null
     public static async Task<string?> PickOpenFileAsync(string extension)
     {
         if (App.MainWindow is null)

@@ -3,8 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Alejandria.Converters;
 
-// Convierte un conteo a Visibility: Visible si es 0, Collapsed si no.
-// Para mostrar un mensaje de "no hay datos" sobre una lista vacía.
+// Visible si el conteo es 0, para el mensaje de lista vacía
 public sealed class CountToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)

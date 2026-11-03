@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Alejandria.Services;
 
-// Abre cualquier archivo con la aplicación predeterminada de Windows.
+// Abre un archivo con su programa de Windows
 public static class FileOpenService
 {
     public static void Abrir(string rutaCompleta)
@@ -15,9 +15,7 @@ public static class FileOpenService
         Process.Start(new ProcessStartInfo(rutaCompleta) { UseShellExecute = true });
     }
 
-    // Abre una carpeta en el Explorador de Windows — la crea primero si
-    // no existe (ej. la carpeta de logs, antes de que se haya escrito el
-    // primer error), para no fallar solo por eso.
+    // Abre la carpeta en el Explorador, la crea si no existe
     public static void AbrirCarpeta(string ruta)
     {
         Directory.CreateDirectory(ruta);

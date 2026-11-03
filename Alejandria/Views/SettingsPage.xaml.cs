@@ -21,7 +21,7 @@ public sealed partial class SettingsPage : Page
     {
         _preferences.Load();
 
-        // Selecciona el ComboBoxItem cuyo Tag coincide con el tema guardado.
+        // Selecciona el tema guardado
         foreach (var item in ThemeCombo.Items.OfType<ComboBoxItem>())
         {
             if (item.Tag as string == _preferences.Theme)
@@ -37,8 +37,7 @@ public sealed partial class SettingsPage : Page
         _settings.Load();
         VersionInstaladaText.Text = $"Versión instalada: {UpdateService.VersionActualTexto(_settings.UpdatesFolder)}";
 
-        // A partir de aquí, los eventos SelectionChanged/Toggled ya reflejan
-        // cambios reales del usuario, no la carga inicial.
+        // De aquí en adelante los eventos ya son cambios del usuario
         _isLoadingInitialState = false;
     }
 

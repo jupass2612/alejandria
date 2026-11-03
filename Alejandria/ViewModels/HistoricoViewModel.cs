@@ -5,13 +5,12 @@ using Alejandria.Services;
 
 namespace Alejandria.ViewModels;
 
-// ViewModel de "Histórico": modelos con Estatus General Terminado. Es de
-// solo lectura. El buscador filtra en tiempo real, con cada tecla.
+// Histórico: modelos terminados, solo lectura, buscador en vivo
 public partial class HistoricoViewModel : ObservableObject
 {
     private readonly AppSettingsService _settings = new();
 
-    // Todos los modelos en Histórico, sin filtrar.
+    // Todos sin filtro
     private List<ModeloResumenItem> _todos = new();
 
     public ObservableCollection<ModeloResumenItem> Modelos { get; } = new();
@@ -35,7 +34,7 @@ public partial class HistoricoViewModel : ObservableObject
         ? "Aparecen aquí solos cuando todas sus áreas llegan a Terminado."
         : $"Nada en Histórico coincide con \"{FiltroTexto.Trim()}\".";
 
-    // Cargando, o la lista quedó vacía
+    // Cargando o lista vacía
     public bool MostrarEstadoVacio => IsLoading || (!HasError && Modelos.Count == 0);
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(MostrarEstadoVacio));
@@ -109,7 +108,7 @@ public partial class HistoricoViewModel : ObservableObject
         }
     }
 
-    // Filtra por nombre o número de parte, sin distinguir mayúsculas/minúsculas.
+    // Filtra por nombre o número de parte
     private void AplicarFiltro()
     {
         var texto = FiltroTexto?.Trim() ?? string.Empty;
@@ -135,8 +134,7 @@ public partial class HistoricoViewModel : ObservableObject
     private static bool Contiene(string campo, string texto) =>
         !string.IsNullOrEmpty(campo) && campo.Contains(texto, StringComparison.OrdinalIgnoreCase);
 
-    // Crea el modelo de actualización. Las áreas que NO cambiaron copian su
-    // config del original; las que sí cambiaron quedan en blanco a propósito.
+    // Crea la actualización: las áreas que no cambiaron copian su config, las que sí quedan en blanco
     public async Task<ModelRecord?> CrearActualizacionAsync(ModelRecord original, ModelRecord nuevo, IReadOnlySet<string> areasCambiadas)
     {
         ErrorMessage = null;
@@ -190,7 +188,7 @@ public partial class HistoricoViewModel : ObservableObject
         }
     }
 
-    // Adjunta el PDF que justifica el cambio, mismo mecanismo que "Adjuntar PDF".
+    // PDF que justifica el cambio
     public async Task<bool> AdjuntarJustificacionAsync(ModelRecord nuevo, string archivoOrigen)
     {
         try
@@ -212,8 +210,7 @@ public partial class HistoricoViewModel : ObservableObject
         }
     }
 
-    // Para "Ver detalles" — la configuración ya guardada de cada área,
-    // de solo lectura. No incluye Unity (se quitó ese apartado).
+    // Config guardada de cada área para Ver detalles
     public async Task<List<DetalleConfiguracion>> ObtenerDetallesAsync(ModelRecord modelo)
     {
         try
@@ -231,9 +228,7 @@ public partial class HistoricoViewModel : ObservableObject
         }
     }
 
-    // Reemplaza el PDF de un modelo en Histórico cuyo documento quedó
-    // marcado "Pendiente a correcciones" — mismo mecanismo que adjuntar
-    // en Altas de Modelos, sin tener que pasar por "Actualizar".
+    // Reemplaza el PDF de un modelo en Histórico con documento pendiente
     public async Task<bool> AdjuntarPdfCorregidoAsync(ModelRecord modelo, string archivoOrigen)
     {
         try
@@ -246,9 +241,7 @@ public partial class HistoricoViewModel : ObservableObject
             await database.UpdateDocumentoAdjuntoAsync(modelo.Id, nombreGuardado);
             modelo.DocumentoAdjunto = nombreGuardado;
 
-            // Este botón solo aparece cuando el documento estaba pendiente
-            // de corrección — adjuntar aquí ES la corrección, así que se
-            // regresa solo a "Correcto" en las áreas que lo tenían pendiente.
+            // Adjuntar aquí es la corrección, se regresa a Correcto
             var detalles = await database.GetDetallesDeModeloAsync(modelo.Id);
             foreach (var detalle in detalles.Where(d => d.EstadoDocumento == ConfigStatusHelper.DocumentoPendienteCorrecciones))
             {

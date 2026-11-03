@@ -70,9 +70,7 @@ public sealed partial class HistoricoPage : Page
 
         await PedirJustificacionAsync(creado);
 
-        // El modelo nuevo empieza sin configurar (al menos en el área que
-        // cambió) — se manda directo a llenarla, en vez de dejarlo perdido
-        // en la pantalla de Modelos.
+        // El modelo nuevo va directo a configurarse
         Frame.Navigate(typeof(ModelConfigPage), creado);
     }
 
@@ -115,7 +113,7 @@ public sealed partial class HistoricoPage : Page
         await ViewModel.InitializeAsync();
     }
 
-    // Pide (sin obligar) el PDF que justifica el cambio de número de parte.
+    // Pide el PDF del cambio (opcional)
     private async Task PedirJustificacionAsync(ModelRecord nuevo)
     {
         var pedirDialog = new ContentDialog

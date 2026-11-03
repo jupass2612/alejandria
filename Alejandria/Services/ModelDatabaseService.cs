@@ -5,28 +5,21 @@ using Microsoft.Data.Sqlite;
 
 namespace Alejandria.Services;
 
-// Acceso a la base SQLite de "Altas de Modelos". El .db vive en una ruta
-// de red compartida para que todas las computadoras lean/escriban lo mismo.
-// Se usa el journal normal (no WAL, SQLite lo desaconseja en red) con un
-// busy_timeout generoso para los "database is locked" ocasionales.
+// SQLite de Altas de Modelos en la red compartida.
+// Sin WAL (no va en red) y con busy_timeout para los database is locked
 public class ModelDatabaseService
 {
     private const string TableName = "AltasModelos";
     private const string DetalleTableName = "DetalleConfiguracion";
     private readonly string _connectionString;
 
-    // Optimización: InitializeAsync se llama cada vez que se abre una pantalla
-    // (Altas, Modelos, Estadísticas...), pero el esquema solo necesita
-    // verificarse/crearse una vez por ejecución de la app. Este flag evita
-    // pagar ese round-trip de red repetidamente. Es estático a propósito:
-    // cada pantalla crea su propia instancia de ModelDatabaseService, pero
-    // todas apuntan al mismo archivo, así que el estado se comparte.
+    // El esquema se revisa una vez por ejecución; estático porque cada pantalla crea su instancia
     private static volatile bool _schemaVerified;
     private static readonly SemaphoreSlim SchemaLock = new(1, 1);
 
     public ModelDatabaseService(string databasePath)
     {
-        // Por si la carpeta todavía no existe
+        // Por si la carpeta no existe
         var carpeta = Path.GetDirectoryName(databasePath);
         if (!string.IsNullOrWhiteSpace(carpeta))
         {
@@ -69,10 +62,7 @@ public class ModelDatabaseService
                 """;
             await command.ExecuteNonQueryAsync();
 
-            // Migración: agrega columnas que no existían en versiones anteriores
-            // de la app, sin perder los datos ya guardados. "Area" se deja de
-            // usar pero no se borra (por si se necesita consultar qué tenía
-            // antes); los 3 números de parte por área son las columnas nuevas.
+            // Migración: columnas nuevas sin perder datos (Area ya no se usa pero no se borra)
             await EnsureColumnExistsAsync(connection, TableName, "Area", "TEXT");
             await EnsureColumnExistsAsync(connection, TableName, "NumeroParteSMT", "TEXT");
             await EnsureColumnExistsAsync(connection, TableName, "NumeroParteBE", "TEXT");
@@ -81,19 +71,14 @@ public class ModelDatabaseService
 
             await EnsureDetalleTableAsync(connection);
 
-            // Campo nuevo: "MODELS_SERIALNUMBERSPECS Packing" en iMES y
-            // Unity — se agrega así (en vez de solo en el CREATE TABLE)
-            // para que también llegue a bases de datos que ya existían
-            // antes de este campo, sin perder nada de lo ya capturado.
+            // Packing de MODELS_SERIALNUMBERSPECS, para bases que ya existían
             await EnsureColumnExistsAsync(connection, DetalleTableName, "ImesModelsSerialNumberSpecsPacking", "TEXT");
             await EnsureColumnExistsAsync(connection, DetalleTableName, "UnityModelsSerialNumberSpecsPacking", "TEXT");
 
-            // Campo nuevo: "Estado del Documento" (Correcto / Pendiente a
-            // correcciones) — reemplaza al viejo valor "Bloqueado por
-            // Documento Malo" que antes se elegía en los campos de BD.
+            // Estado del documento, reemplaza al viejo Bloqueado por Documento Malo
             await EnsureColumnExistsAsync(connection, DetalleTableName, "EstadoDocumento", "TEXT");
 
-            // MODELID de MODELS_MASTER, se captura en el Paso 2 y lo usa el Paso 3
+            // MODELID de MODELS_MASTER (Paso 2 → Paso 3)
             await EnsureColumnExistsAsync(connection, DetalleTableName, "ImesModelId", "TEXT");
 
             _schemaVerified = true;
@@ -104,8 +89,7 @@ public class ModelDatabaseService
         }
     }
 
-    // Crea la tabla DetalleConfiguracion (clave ModeloId+Area) o migra la
-    // versión vieja (una fila por modelo, sin columna Area) si la encuentra.
+    // Crea DetalleConfiguracion (ModeloId+Area) o migra la versión vieja
     private async Task EnsureDetalleTableAsync(SqliteConnection connection)
     {
         using var checkTableCommand = connection.CreateCommand();
@@ -145,13 +129,10 @@ public class ModelDatabaseService
         var tieneArea = await ColumnExistsAsync(connection, DetalleTableName, "Area");
         if (tieneArea)
         {
-            return; // Ya está en el esquema nuevo.
+            return; // Ya está en el esquema nuevo
         }
 
-        // Esquema viejo (un registro por modelo, sin Area): migrar a la
-        // tabla nueva con clave compuesta, atribuyendo cada configuración
-        // existente al área principal del modelo (SMT > BE > TLA) para no
-        // perder lo que ya se había capturado.
+        // Esquema viejo: se migra pasando la config al área principal
         using (var createNewCommand = connection.CreateCommand())
         {
             createNewCommand.CommandText = $"""
@@ -216,7 +197,7 @@ public class ModelDatabaseService
         }
     }
 
-    // Agrega una columna si todavía no existe (migración segura, no destructiva).
+    // Agrega la columna si no existe
     private static async Task EnsureColumnExistsAsync(SqliteConnection connection, string tableName, string columnName, string columnType)
     {
         if (await ColumnExistsAsync(connection, tableName, columnName))
@@ -267,8 +248,7 @@ public class ModelDatabaseService
         return results;
     }
 
-    // Trae los modelos y toda su configuración en una sola conexión (dos
-    // consultas), en vez de abrir la conexión dos veces por separado.
+    // Modelos y su config en una sola conexión
     public async Task<(List<ModelRecord> Modelos, Dictionary<int, List<DetalleConfiguracion>> Detalles)> GetModelosConDetallesAsync()
     {
         using var connection = await OpenConnectionAsync();
@@ -367,7 +347,7 @@ public class ModelDatabaseService
         await command.ExecuteNonQueryAsync();
     }
 
-    // Todas las configuraciones de todos los modelos, agrupadas por ModeloId.
+    // Config de todos los modelos por ModeloId
     public async Task<Dictionary<int, List<DetalleConfiguracion>>> GetAllDetallesAsync()
     {
         var results = new Dictionary<int, List<DetalleConfiguracion>>();
@@ -397,7 +377,7 @@ public class ModelDatabaseService
         return results;
     }
 
-    // Config de un área de un modelo. Null si esa área no tiene nada capturado.
+    // Config de un área, null si no hay
     public async Task<DetalleConfiguracion?> GetDetalleAsync(int modeloId, string area)
     {
         using var connection = await OpenConnectionAsync();
@@ -416,7 +396,7 @@ public class ModelDatabaseService
         return await reader.ReadAsync() ? ReadDetalle(reader) : null;
     }
 
-    // Todas las configuraciones (todas las áreas) de un modelo.
+    // Config de todas las áreas del modelo
     public async Task<List<DetalleConfiguracion>> GetDetallesDeModeloAsync(int modeloId)
     {
         var results = new List<DetalleConfiguracion>();
@@ -441,7 +421,7 @@ public class ModelDatabaseService
         return results;
     }
 
-    // Inserta o actualiza la config de un área — la clave es (ModeloId, Area).
+    // Inserta o actualiza por (ModeloId, Area)
     public async Task SaveDetalleAsync(DetalleConfiguracion detalle)
     {
         using var connection = await OpenConnectionAsync();
@@ -494,7 +474,7 @@ public class ModelDatabaseService
         await command.ExecuteNonQueryAsync();
     }
 
-    // Actualiza solo el nombre del PDF adjunto.
+    // Solo el nombre del PDF
     public async Task UpdateDocumentoAdjuntoAsync(int modeloId, string nombreArchivo)
     {
         using var connection = await OpenConnectionAsync();
@@ -549,11 +529,7 @@ public class ModelDatabaseService
     {
         var connection = new SqliteConnection(_connectionString);
 
-        // Si la ruta de red no está disponible (VPN apagada, fuera de la red
-        // de la empresa, el servidor caído...), abrir la conexión puede
-        // tardar mucho en fallar por sí sola (el sistema operativo reintenta
-        // la resolución de la ruta UNC). Con este límite, la app avisa en
-        // unos segundos en vez de quedarse "trabada" sin explicación.
+        // Sin red o VPN la conexión tarda mucho en fallar, se corta a los pocos segundos
         var openTask = connection.OpenAsync();
         var timeoutTask = Task.Delay(TimeSpan.FromSeconds(8));
         var finished = await Task.WhenAny(openTask, timeoutTask);
@@ -566,11 +542,10 @@ public class ModelDatabaseService
                 "Verifica tu conexión de red (VPN o red de la empresa) y que la ruta configurada exista.");
         }
 
-        await openTask; // Propaga cualquier excepción real de apertura (permisos, ruta inválida, etc.).
+        await openTask; // Si falló de verdad, sale aquí
 
         using var pragma = connection.CreateCommand();
-        // Espera hasta 5s si otra computadora tiene el archivo bloqueado en ese instante,
-        // en vez de fallar de inmediato con "database is locked".
+        // Espera hasta 5 s si otra PC tiene el archivo bloqueado
         pragma.CommandText = "PRAGMA busy_timeout = 5000;";
         await pragma.ExecuteNonQueryAsync();
 

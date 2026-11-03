@@ -16,7 +16,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Título + botón de añadir -->
+        <!-- Título y botón -->
         <Grid Grid.Row="0" ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -66,7 +66,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Encabezado de columnas -->
+                <!-- Encabezado -->
                 <Grid
                     Grid.Row="0"
                     Padding="20,14"

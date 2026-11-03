@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Alejandria.Converters;
 
-// Convierte bool a Visibility. ConverterParameter="Invert" para invertir el resultado.
+// bool a Visibility; "Invert" lo invierte
 public sealed class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)

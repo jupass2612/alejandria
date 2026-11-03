@@ -5,7 +5,7 @@ using Alejandria.Services;
 
 namespace Alejandria.ViewModels;
 
-// Fila de la tabla de Modelos: el registro más sus estatus calculados.
+// Fila de Modelos con sus estatus
 public class ModeloResumenItem
 {
     public required ModelRecord Modelo { get; init; }
@@ -21,12 +21,10 @@ public class ModeloResumenItem
         ? $"{DiasRetraso} día{(DiasRetraso == 1 ? string.Empty : "s")} de retraso"
         : "En plazo";
 
-    // True si alguna área tiene el documento marcado "Pendiente a
-    // correcciones" — en Histórico, esto habilita "Adjuntar PDF" para
-    // poder subir la versión corregida sin usar "Actualizar".
+    // Si alguna área tiene el documento pendiente
     public bool NecesitaCorreccionDocumento { get; init; }
 
-    // Avance por paso (1 Parents, 2 Master, 3 SerialSpecs, 4 Plataforma)
+    // Avance por paso
     public string EstatusPaso1 { get; init; } = ConfigStatusHelper.Pendiente;
     public string EstatusPaso2 { get; init; } = ConfigStatusHelper.Pendiente;
     public string EstatusPaso3 { get; init; } = ConfigStatusHelper.Pendiente;
@@ -41,17 +39,17 @@ public class ModeloResumenItem
         $"1 Parents: {EstatusPaso1} · 2 Master: {EstatusPaso2} · 3 SerialSpecs: {EstatusPaso3} · 4 Plataforma: {EstatusPaso4}";
 }
 
-// ViewModel de "Modelos": lista los modelos con el avance de su configuración.
+// Modelos pendientes con su avance
 public partial class ModelosViewModel : ObservableObject
 {
     private readonly AppSettingsService _settings = new();
 
     public ModelDatabaseService? Database { get; private set; }
 
-    // Lo que se muestra (ya filtrado y ordenado)
+    // Lo que se ve, filtrado y ordenado
     public ObservableCollection<ModeloResumenItem> Modelos { get; } = new();
 
-    // Todos los modelos pendientes, sin filtro
+    // Todos los pendientes
     private readonly List<ModeloResumenItem> _todos = new();
 
     public const string FiltroTodos = "Todos";
@@ -75,10 +73,10 @@ public partial class ModelosViewModel : ObservableObject
     // Hay modelos pero el filtro no dejó ninguno
     public bool SinResultados => _todos.Count > 0 && Modelos.Count == 0;
 
-    // No hay ningún modelo pendiente
+    // No hay pendientes
     public bool SinModelos => !IsLoading && !HasError && _todos.Count == 0;
 
-    // Se muestra mientras carga o cuando no hay ningún modelo pendiente
+    // Cargando o sin pendientes
     public bool MostrarEstadoVacio => IsLoading || SinModelos;
 
     partial void OnIsLoadingChanged(bool value)
@@ -147,8 +145,7 @@ public partial class ModelosViewModel : ObservableObject
             detalles.TryGetValue(modelo.Id, out var detallesDelModelo);
             var resumen = ConfigStatusHelper.ComputeResumenModelo(modelo, detallesDelModelo);
 
-            // Los modelos ya Terminados (todas sus áreas) "pasan" a Histórico
-            // y dejan de aparecer aquí — ver HistoricoViewModel.
+            // Los terminados se van a Histórico
             if (resumen.EstatusGeneral == ConfigStatusHelper.Terminado)
             {
                 continue;
@@ -174,8 +171,7 @@ public partial class ModelosViewModel : ObservableObject
         AplicarFiltro();
     }
 
-    // Busca por nombre, número de modelo o número de parte, filtra por chip
-    // y deja los atrasados arriba (los más atrasados primero)
+    // Búsqueda, filtro y atrasados arriba
     private void AplicarFiltro()
     {
         var texto = Busqueda.Trim();

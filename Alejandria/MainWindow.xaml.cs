@@ -14,8 +14,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Alejandria;
 
-// App shell: custom title bar, solid background (no Mica/Acrylic), left
-// NavigationView, and a content Frame that hosts each page.
+// Ventana principal: barra de título propia, fondo sólido, menú lateral y Frame
 public sealed partial class MainWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
@@ -47,9 +46,7 @@ public sealed partial class MainWindow : Window
 
         ContentFrame.Navigated += ContentFrame_Navigated;
 
-        // Navegar aquí mismo (antes de Activate()) puede dejar el Frame en
-        // blanco, porque la ventana todavía no está "viva". Se espera a
-        // Activated y se hace una sola vez.
+        // Si se navega antes de Activated el Frame puede quedar en blanco
         Activated += MainWindow_Activated;
     }
 
@@ -62,19 +59,16 @@ public sealed partial class MainWindow : Window
             var defaultItem = ViewModel.NavItems.FirstOrDefault(item => item.Tag == "Altas");
             if (defaultItem is not null)
             {
-                // Selecciona el item; RootNavigationView_SelectionChanged hace la navegación real,
-                // así queda un único punto de entrada para navegar.
+                // La navegación real la hace SelectionChanged
                 RootNavigationView.SelectedItem = defaultItem;
             }
         }
         catch (Exception)
         {
-            // Si algo falla aquí, es mejor dejar la ventana visible (aunque
-            // sin navegar) que arriesgar una pantalla negra silenciosa.
+            // Si falla, mejor dejar la ventana visible que una pantalla negra
         }
 
-        // Se dispara sin esperar — un respaldo tardado o fallido (ej. red
-        // lenta) no debe retrasar que la ventana termine de arrancar.
+        // Sin esperar, para no frenar el arranque si la red está lenta
         _ = RespaldarBaseDeDatosEnSegundoPlanoAsync();
 
         await MostrarQueHayDeNuevoSiCorrespondeAsync();
@@ -94,14 +88,8 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // Compara la versión actual contra la última que ya vio esta
-    // computadora (guardada en preferences.json) — si es distinta,
-    // muestra las notas de la versión actual una sola vez. Un
-    // LastSeenVersion vacío se trata igual que "distinto" (no como
-    // "instalación nueva, no mostrar nada"): si esta función se agregó
-    // en una versión posterior a la que ya tenían instalada, el primer
-    // arranque con el código nuevo tendría LastSeenVersion vacío aunque
-    // sí sea una actualización real — así también se muestra ahí.
+    // Muestra las notas de la versión una vez si cambió desde la última que vio esta PC.
+    // Vacío también cuenta como distinta
     private async Task MostrarQueHayDeNuevoSiCorrespondeAsync()
     {
         try
@@ -112,10 +100,7 @@ public sealed partial class MainWindow : Window
             var versionActual = ChangelogService.VersionActualTexto;
             var versionVista = preferences.LastSeenVersion;
 
-            // Diagnóstico temporal: mientras se confirma que esto ya
-            // funciona bien en un caso real, se deja registrado qué
-            // valores está comparando cada vez que arranca — así, si
-            // vuelve a no salir, el log dice por qué en vez de adivinar.
+            // Para saber por qué no salió, si vuelve a pasar
             LogService.LogInfo($"Chequeo de novedades — versión actual: \"{versionActual}\", última vista: \"{versionVista}\"");
 
             if (versionVista == versionActual)
@@ -133,10 +118,7 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            // Justo después de Activated, en el primer arranque (más
-            // notorio recién tras actualizar) XamlRoot puede tardar unos
-            // milisegundos más en estar listo — se espera hasta 2
-            // segundos en vez de rendirse al primer intento.
+            // Al primer arranque XamlRoot puede tardar, se espera hasta 2 s
             for (var intentos = 0; intentos < 40 && Content?.XamlRoot is null; intentos++)
             {
                 await Task.Delay(50);
@@ -145,8 +127,7 @@ public sealed partial class MainWindow : Window
             if (Content?.XamlRoot is null)
             {
                 LogService.LogInfo("No se muestra: la ventana no tuvo XamlRoot listo tras esperar 2 segundos.");
-                // No se marca como vista — así se vuelve a intentar en el
-                // siguiente arranque, en vez de perder la oportunidad.
+                // No se marca como vista para intentarlo en el siguiente arranque
                 return;
             }
 
@@ -168,14 +149,12 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            // No es crítico — si algo falla aquí, la app sigue funcionando
-            // normal — pero se registra, para poder ver por qué si vuelve a pasar.
+            // No es crítico, solo queda en el log
             LogService.LogError("MainWindow.MostrarQueHayDeNuevoSiCorrespondeAsync", ex);
         }
     }
 
-    // Removes the native title bar but keeps the resizable border. Dragging
-    // and the caption buttons in MainWindow.xaml take over from here.
+    // Quita la barra nativa pero deja el borde para redimensionar
     private void SetUpCustomTitleBar()
     {
         if (AppWindow.Presenter is OverlappedPresenter presenter)
@@ -242,8 +221,7 @@ public sealed partial class MainWindow : Window
         };
     }
 
-    // Carga el logo por ruta absoluta (ms-appx:// no funciona sin empaquetar).
-    // Se usa para el ícono de la barra de título y de la ventana.
+    // Logo por ruta absoluta (ms-appx:// no jala sin empaquetar)
     private void LoadAppLogo()
     {
         try
@@ -262,21 +240,14 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception)
         {
-            // El logo es cosmético: si el archivo no está (por ejemplo, en un
-            // build que no copió Assets), la app sigue funcionando sin él.
+            // Si no está el logo, sigue sin él
         }
     }
 
     private void EnsureSolidBackground()
     {
-        // Deliberadamente sin Mica/Acrylic: el estándar de diseño del
-        // proyecto prohíbe explícitamente efectos "glassmorphism", y un
-        // backdrop translúcido de todos modos ignora nuestra paleta
-        // personalizada (se pinta con el tinte que decida Windows, no con
-        // AppBackgroundBrush) — en algunas máquinas (VMs, Escritorio
-        // Remoto, DWM limitado) además renderiza negro sólido. El fondo
-        // real ahora es 100% sólido: RootGrid.Background en MainWindow.xaml,
-        // usando AppBackgroundBrush del estándar de diseño.
+        // Sin Mica/Acrylic: no respeta la paleta y en algunas PCs (VM, Escritorio Remoto) sale negro.
+        // El fondo lo pone RootGrid con AppBackgroundBrush
         SystemBackdrop = null;
     }
 
@@ -287,7 +258,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // Usa el PageType de cada NavItem, una sola fuente de verdad
+        // Usa el PageType de cada NavItem
         var target = ViewModel.NavItems.FirstOrDefault(item => item.Tag == tag)?.PageType ?? typeof(AltasModelosPage);
 
         if (ContentFrame.CurrentSourcePageType != target)
@@ -298,7 +269,7 @@ public sealed partial class MainWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        // Mirrors the sidebar's Settings item so the top bar shortcut also works.
+        // El botón de arriba marca también Ajustes en el menú
         if (RootNavigationView.MenuItemsSource is System.Collections.Generic.IEnumerable<NavItem> items)
         {
             foreach (var item in items)
@@ -318,7 +289,7 @@ public sealed partial class MainWindow : Window
         ContentFrame.Navigate(typeof(SettingsPage));
     }
 
-    // Muestra el aviso abajo 3 segundos; uno nuevo reemplaza al anterior
+    // Muestra el aviso 3 s; uno nuevo reemplaza al anterior
     private void MostrarToast(string mensaje, ToastService.Tipo tipo)
     {
         ToastIconExito.Visibility = tipo == ToastService.Tipo.Exito ? Visibility.Visible : Visibility.Collapsed;
@@ -332,7 +303,7 @@ public sealed partial class MainWindow : Window
         _toastTimer.Start();
     }
 
-    // Si una página navega a otra del menú, el menú marca la correcta
+    // Si una página navega a otra del menú, marca la correcta
     private void ContentFrame_Navigated(object sender, NavigationEventArgs e)
     {
         var item = ViewModel.NavItems.FirstOrDefault(i => i.PageType == e.SourcePageType);
@@ -342,7 +313,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // Ctrl+N desde cualquier pantalla: va a Altas y abre "Añadir modelo"
+    // Ctrl+N desde cualquier pantalla: va a Altas y abre Añadir modelo
     private async void NuevoModeloAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;

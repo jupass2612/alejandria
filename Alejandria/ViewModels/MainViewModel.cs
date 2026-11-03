@@ -5,7 +5,7 @@ using Alejandria.Views;
 
 namespace Alejandria.ViewModels;
 
-// ViewModel del shell (barra de título + NavigationView).
+// Shell: barra de título y menú
 public partial class MainViewModel : ObservableObject
 {
     public ObservableCollection<NavItem> NavItems { get; } = new();

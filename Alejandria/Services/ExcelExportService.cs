@@ -4,13 +4,13 @@ using Alejandria.ViewModels;
 
 namespace Alejandria.Services;
 
-// Genera el libro de Excel. Se corre en un hilo de fondo porque escribir el .xlsx no es instantáneo.
+// Genera el Excel, se corre en otro hilo
 public static class ExcelExportService
 {
     private const int AltasColumnCount = 9;
     private const int ModelosColumnCount = 19;
 
-    // alcanceDescripcion: null = reporte general, si no describe el alcance especializado.
+    // alcanceDescripcion null = reporte general
     public static void Export(
         string filePath,
         IReadOnlyList<ModelRecord> altas,
@@ -20,10 +20,7 @@ public static class ExcelExportService
     {
         using var workbook = new XLWorkbook();
 
-        // La portada va primero (queda como la pestaña más a la izquierda) —
-        // es informativa, al estilo de la plantilla de BCS. Las hojas de
-        // datos, en cambio, son las que el destinatario va a filtrar/ordenar/
-        // copiar, así que llevan AutoFilter y no se tocan de otra forma.
+        // Portada primero; las hojas de datos van limpias con AutoFilter
         BuildPortadaSheet(workbook, altas.Count, alcanceDescripcion);
         BuildAltasSheet(workbook, altas, alcanceDescripcion);
         BuildModelosSheet(workbook, modelos, detallesPorModelo, alcanceDescripcion);
@@ -31,8 +28,7 @@ public static class ExcelExportService
         workbook.SaveAs(filePath);
     }
 
-    // Hoja de portada, misma plantilla que la del PDF. Es la única hoja
-    // informativa — las de datos se quedan limpias para poder filtrarlas.
+    // Portada, misma plantilla que el PDF
     private static void BuildPortadaSheet(XLWorkbook workbook, int totalModelos, string? filtro)
     {
         var sheet = workbook.Worksheets.Add("Portada");
@@ -107,7 +103,7 @@ public static class ExcelExportService
         sheet.Column(2).Width = 55;
     }
 
-    // Una fila "Etiqueta: valor" de la portada.
+    // Fila "Etiqueta: valor" de la portada
     private static int WritePortadaRow(IXLWorksheet sheet, int row, string label, string value)
     {
         sheet.Cell(row, 1).Value = label;
@@ -201,8 +197,7 @@ public static class ExcelExportService
             detallesPorModelo.TryGetValue(modelo.Id, out var detallesDelModelo);
             var detallesPorArea = (detallesDelModelo ?? new List<DetalleConfiguracion>()).ToDictionary(d => d.Area, d => d);
 
-            // Una fila por cada área que el modelo tenga (SMT, BE y/o TLA) —
-            // no solo la principal, igual que el reporte PDF.
+            // Una fila por área
             foreach (var area in modelo.AreasDisponibles)
             {
                 detallesPorArea.TryGetValue(area, out var detalle);
@@ -255,7 +250,7 @@ public static class ExcelExportService
         sheet.Columns().AdjustToContents();
     }
 
-    // Dibuja el banner azul. Devuelve la fila donde va el encabezado de la tabla.
+    // Banner azul, regresa la fila del encabezado
     private static int DrawBanner(IXLWorksheet sheet, string titulo, string? filtro, int columnCount)
     {
         var lastColumnLetter = ColumnLetter(columnCount);
@@ -308,7 +303,7 @@ public static class ExcelExportService
         }
         catch (Exception)
         {
-            // El logo es decorativo — si algo falla al insertarlo, el reporte sigue siendo válido sin él.
+            // El logo es decorativo
         }
     }
 

@@ -5,41 +5,39 @@ using Alejandria.Services;
 
 namespace Alejandria.ViewModels;
 
-// Una tarjeta de indicador (KPI): etiqueta + valor.
+// Tarjeta de KPI
 public class KpiItem
 {
     public required string Label { get; init; }
     public required string Value { get; init; }
 
-    // "Success"/"Warning"/"Pendiente"/"Danger", o null para dejar el número neutral.
+    // Success, Warning, Pendiente, Danger o null
     public string? Tono { get; init; }
 
     public bool TieneTono => !string.IsNullOrEmpty(Tono);
 }
 
-// Cuántas configuraciones ha completado cada responsable, con una barra proporcional al máximo.
+// Configuraciones por responsable, con barra proporcional
 public class ResponsableResumenItem
 {
     public required string Nombre { get; init; }
     public required int TareasCompletadas { get; init; }
 
-    // 0.0-1.0 relativo a quien tiene más tareas, para el ancho de la barra.
+    // 0 a 1 contra el que más tiene
     public required double Proporcion { get; init; }
 }
 
-// ViewModel de "Estadísticas": KPIs, quién ha completado qué, y los
-// reportes (Excel/PDF). Los KPIs cuentan TODOS los modelos, pero los
-// reportes solo cubren los que ya están en Histórico.
+// Estadísticas: KPIs, responsables y reportes.
+// Los KPIs cuentan todo, los reportes solo Histórico
 public partial class EstadisticasViewModel : ObservableObject
 {
     private readonly AppSettingsService _settings = new();
 
-    // Se guardan para los reportes (Excel/PDF), así no hay que volver a
-    // consultar la base de datos cuando el usuario pide exportar.
+    // Se guardan para no volver a consultar al exportar
     private Dictionary<int, List<DetalleConfiguracion>> _detallesPorModelo = new();
     private List<ModeloResumenItem> _modelosResumen = new();
 
-    // Solo los modelos en Histórico — universo de los reportes.
+    // Solo Histórico, es lo que entra en los reportes
     private List<ModelRecord> _modelosHistorico = new();
 
     [ObservableProperty]
@@ -64,7 +62,7 @@ public partial class EstadisticasViewModel : ObservableObject
     [ObservableProperty]
     private string? reportMessage;
 
-    // Ruta del último reporte generado, para el botón "Abrir reporte".
+    // Último reporte, para Abrir reporte
     [ObservableProperty]
     private string? ultimoReportePath;
 
@@ -75,17 +73,17 @@ public partial class EstadisticasViewModel : ObservableObject
     public ObservableCollection<KpiItem> Kpis { get; } = new();
     public ObservableCollection<ResponsableResumenItem> Responsables { get; } = new();
 
-    // --- Selector de modelos para el reporte especializado (búsqueda en tiempo real + lista elegida) ---
+    // Selector de modelos del reporte especializado
 
     [ObservableProperty]
     private string busquedaModelo = string.Empty;
 
     partial void OnBusquedaModeloChanged(string value) => AplicarFiltroBusqueda();
 
-    // Modelos en Histórico que coinciden con la búsqueda y no están elegidos todavía.
+    // Coinciden con la búsqueda y no están elegidos
     public ObservableCollection<ModelRecord> SugerenciasBusqueda { get; } = new();
 
-    // Los modelos ya agregados al reporte especializado.
+    // Modelos ya agregados al reporte
     public ObservableCollection<ModelRecord> ModelosSeleccionados { get; } = new();
 
     public void AgregarModeloSeleccionado(ModelRecord modelo)
@@ -109,8 +107,7 @@ public partial class EstadisticasViewModel : ObservableObject
         AplicarFiltroBusqueda();
     }
 
-    // Filtra por nombre o número de parte, igual que el buscador de
-    // Histórico. No muestra nada hasta que se escriba algo.
+    // Filtra por nombre o número de parte; vacío no muestra nada
     private void AplicarFiltroBusqueda()
     {
         SugerenciasBusqueda.Clear();
@@ -157,7 +154,7 @@ public partial class EstadisticasViewModel : ObservableObject
             var database = new ModelDatabaseService(_settings.DatabasePath);
             await database.InitializeAsync();
 
-            // Optimización: una sola conexión para ambas tablas en vez de dos.
+            // Una sola conexión para las dos tablas
             var (modelos, detalles) = await database.GetModelosConDetallesAsync();
             _detallesPorModelo = detalles;
 
@@ -195,9 +192,7 @@ public partial class EstadisticasViewModel : ObservableObject
                     default: pendientes++; break;
                 }
 
-                // El estado del documento es aparte del avance de la
-                // configuración — un modelo puede estar Terminado y aun
-                // así tener pendiente subir una versión corregida del PDF.
+                // El documento va aparte del avance: puede estar Terminado y con PDF pendiente
                 if (!yaContadoPorDocumento && ConfigStatusHelper.TieneDocumentoPendienteCorreccion(detallesDelModelo))
                 {
                     bloqueados++;
@@ -208,8 +203,7 @@ public partial class EstadisticasViewModel : ObservableObject
                     fueraDePlazo++;
                 }
 
-                // El conteo por responsable suma las TODAS las áreas del modelo,
-                // no solo la principal — cada área es trabajo real de alguien.
+                // Cuenta todas las áreas, cada una es trabajo de alguien
                 foreach (var detalleArea in detallesDelModelo ?? Enumerable.Empty<DetalleConfiguracion>())
                 {
                     foreach (var campo in ConfigStatusHelper.CamposDeEstatus(detalleArea))
@@ -225,8 +219,7 @@ public partial class EstadisticasViewModel : ObservableObject
             _modelosResumen = modelosResumen;
             _modelosHistorico = modelosHistorico;
 
-            // Si algún modelo elegido para el reporte especializado ya no
-            // existe o dejó de estar en Histórico, se quita de la lista.
+            // Quita los elegidos que ya no están en Histórico
             var idsHistorico = modelosHistorico.Select(m => m.Id).ToHashSet();
             for (var i = ModelosSeleccionados.Count - 1; i >= 0; i--)
             {
@@ -274,8 +267,7 @@ public partial class EstadisticasViewModel : ObservableObject
         }
     }
 
-    // Genera el Excel en un hilo aparte para no congelar la interfaz.
-    // reporteGeneral=true junta todo Histórico; false usa ModelosSeleccionados.
+    // Excel en otro hilo; general = todo Histórico, si no los elegidos
     public async Task<bool> ExportarExcelAsync(string filePath, bool reporteGeneral)
     {
         IsExportingExcel = true;
@@ -314,7 +306,7 @@ public partial class EstadisticasViewModel : ObservableObject
         }
     }
 
-    // Genera el PDF en un hilo aparte (una página por área de cada modelo).
+    // PDF en otro hilo, una página por área
     public async Task<bool> ExportarPdfAsync(string filePath, bool reporteGeneral)
     {
         IsExportingPdf = true;
@@ -351,7 +343,7 @@ public partial class EstadisticasViewModel : ObservableObject
         }
     }
 
-    // Qué modelos entran al reporte y el texto de alcance para el banner.
+    // Modelos del reporte y texto de alcance
     private (List<ModelRecord>? Modelos, string? Alcance) ObtenerAlcanceReporte(bool reporteGeneral)
     {
         if (reporteGeneral)

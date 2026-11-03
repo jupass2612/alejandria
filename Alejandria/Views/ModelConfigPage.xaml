@@ -43,7 +43,7 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Franja de contexto: área, documento, plazo y estatus -->
+        <!-- Área, documento, plazo y estatus -->
         <Border
             Grid.Row="1"
             Margin="0,16,0,0"
@@ -63,7 +63,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Cada área tiene su propia configuración -->
+                    <!-- Cada área tiene su propia config -->
                     <StackPanel Grid.Column="0" Spacing="6">
                         <TextBlock Text="Área" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox
@@ -110,7 +110,7 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Qué le falta a esta área -->
+                <!-- Qué falta -->
                 <Grid ColumnSpacing="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -133,7 +133,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Sugerencia: otra área con el mismo número de parte ya tiene configuración capturada -->
+        <!-- Otra área con el mismo número de parte ya tiene config -->
         <InfoBar
             x:Name="CopiarConfigInfoBar"
             Grid.Row="2"
@@ -162,7 +162,7 @@
         <ScrollViewer x:Name="PasosScroll" Grid.Row="5" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="20" HorizontalAlignment="Stretch">
 
-            <!-- Pasos -->
+            <!-- Barra de pasos -->
             <Border
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -352,7 +352,7 @@
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
 
-                    <!-- Datos para la vista previa -->
+                    <!-- Serial, plantilla y MODELID -->
                     <StackPanel Spacing="6">
                         <TextBlock Text="Serial de ejemplo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <Grid ColumnSpacing="8">
@@ -613,7 +613,7 @@
                             <TextBox x:Name="WorkOrderBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
                         </StackPanel>
                         <Grid Grid.Column="1">
-                            <!-- SMT le dice "Ruta" a este dato; BE y TLA le dicen "Flujo" al mismo ROUTE_NAME de iMES — solo se muestra el que aplica. -->
+                            <!-- SMT ve Ruta, BE/TLA ven Flujo -->
                             <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.EsAreaSmt, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Text="Ruta" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBox x:Name="RutaBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />

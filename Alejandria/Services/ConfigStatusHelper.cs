@@ -2,10 +2,8 @@ using Alejandria.Models;
 
 namespace Alejandria.Services;
 
-// Constantes de estatus y cómo combinarlos: si algo está Bloqueado, todo
-// está Bloqueado; si todo está completo, Terminado; si hay algo pero no
-// todo, En Proceso; si no hay nada, Pendiente. El estatus general del
-// MODELO completo tampoco llega a Terminado sin el PDF adjunto.
+// Estatus y cómo se combinan: Bloqueado gana, todo completo = Terminado, algo = En Proceso, nada = Pendiente.
+// El modelo no llega a Terminado sin PDF
 public static class ConfigStatusHelper
 {
     public const string Pendiente = "Pendiente";
@@ -14,24 +12,18 @@ public static class ConfigStatusHelper
     public const string Bloqueado = "Bloqueado por Documento Malo";
     public const string NoAplica = "No Aplica";
 
-    // Estado del documento (PDF) de un área — separado de los campos de
-    // BD, ya no es una opción más del dropdown de estatus. Si queda
-    // "Pendiente a correcciones", esa área (y por lo tanto el modelo) no
-    // puede llegar a Terminado, y en Histórico se habilita "Adjuntar PDF"
-    // para poder subir la versión corregida sin tener que usar "Actualizar".
+    // Estado del documento, aparte de los campos de BD
     public const string DocumentoCorrecto = "Correcto";
     public const string DocumentoPendienteCorrecciones = "Pendiente a correcciones";
 
     public static IReadOnlyList<string> EstadoDocumentoOptions { get; } =
         new[] { DocumentoCorrecto, DocumentoPendienteCorrecciones };
 
-    // True si alguna de las áreas del modelo tiene el documento marcado
-    // "Pendiente a correcciones" — no afecta el estatus de avance, solo
-    // sirve para saber si hace falta subir una versión corregida del PDF.
+    // Si alguna área tiene el documento pendiente (no afecta el avance)
     public static bool TieneDocumentoPendienteCorreccion(IEnumerable<DetalleConfiguracion>? detalles) =>
         (detalles ?? Enumerable.Empty<DetalleConfiguracion>()).Any(d => d.EstadoDocumento == DocumentoPendienteCorrecciones);
 
-    // Personas que pueden aparecer como responsables.
+    // Responsables
     public static readonly string[] Responsables =
     {
         "Juan Pablo Solis Sanchez",
@@ -40,8 +32,7 @@ public static class ConfigStatusHelper
         "Reynaldo Barrera"
     };
 
-    // Regresa el nombre como está en Responsables. Registros viejos
-    // guardaron nombres cortos ("Juan Pablo Solis"), se empatan por inicio.
+    // Nombre como está en Responsables; los viejos cortos se empatan por inicio
     public static string NormalizarResponsable(string? nombre)
     {
         if (string.IsNullOrWhiteSpace(nombre))
@@ -55,12 +46,11 @@ public static class ConfigStatusHelper
             ?? limpio;
     }
 
-    // Opciones para los campos de BD (iMES). "Bloqueado" ya no es una
-    // opción aquí — ahora se controla aparte con "Estado del Documento".
+    // Opciones de los campos de BD
     public static IReadOnlyList<string> BdStatusOptions { get; } =
         new[] { Pendiente, EnProceso, NoAplica }.Concat(Responsables).ToArray();
 
-    // Opciones para Flujo y PartLineBomMaintenance. Sin "Bloqueado".
+    // Opciones de PartLineBomMaintenance
     public static IReadOnlyList<string> PlataformaStatusOptions { get; } =
         new[] { Pendiente, EnProceso, NoAplica }.Concat(Responsables).ToArray();
 
@@ -72,7 +62,7 @@ public static class ConfigStatusHelper
 
     public static bool IsFilled(string? value) => !string.IsNullOrWhiteSpace(value);
 
-    // Combina varios valores de campo (estatus, "No Aplica", o nombre) en un estatus agregado.
+    // Junta varios valores de campo en un estatus
     public static string Aggregate(params string?[] values)
     {
         if (values.Any(IsBlocked))
@@ -90,7 +80,7 @@ public static class ConfigStatusHelper
         return Pendiente;
     }
 
-    // Combina estatus ya calculados (ej. BD + Plataforma, o el mismo estatus de varias áreas).
+    // Junta estatus ya calculados
     public static string Combine(params string[] statuses)
     {
         if (statuses.Any(s => s == Bloqueado))
@@ -108,11 +98,7 @@ public static class ConfigStatusHelper
         return EnProceso;
     }
 
-    // Estatus de Plataforma iMES: Work Order/Ruta/Línea + Flujo/PartLineBomMaintenance.
-    // SMT le llama "Ruta" al campo que llega de iMES (ROUTE_NAME); BE y
-    // TLA le llaman "Flujo" al mismo dato — es el mismo valor, solo
-    // cambia cómo se le dice según el área.
-    // SMT-BE (área combinada) usa "Ruta" igual que SMT sola.
+    // SMT y SMT-BE usan Ruta, BE y TLA Flujo (mismo ROUTE_NAME)
     public static bool EsAreaSmt(string area) =>
         string.Equals(area, "SMT", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(area, "SMT-BE", StringComparison.OrdinalIgnoreCase);
@@ -130,10 +116,7 @@ public static class ConfigStatusHelper
             detalle.PartLineBomMaintenance);
     }
 
-    // Campos de estatus/responsable de un modelo, para el conteo por persona.
-    // Ruta/Flujo ya no cuentan aquí: dejaron de ser un estatus que alguien
-    // marca a mano — ahora es un dato que llega solo de iMES, igual que
-    // Work Order y Línea (que tampoco cuentan aquí).
+    // Campos que cuentan para el conteo por persona (Ruta/Flujo vienen de iMES, no cuentan)
     public static IEnumerable<string> CamposDeEstatus(DetalleConfiguracion detalle)
     {
         yield return detalle.ImesModelsParents;
@@ -142,7 +125,7 @@ public static class ConfigStatusHelper
         yield return detalle.PartLineBomMaintenance;
     }
 
-    // Resumen de un modelo: estatus BD, Plataforma, General, fecha límite y días de retraso.
+    // Resumen: BD, Plataforma, General, fecha límite y retraso
     public readonly record struct ModeloResumen(
         string EstatusBd,
         string EstatusPlataforma,
@@ -150,7 +133,7 @@ public static class ConfigStatusHelper
         DateTime FechaLimite,
         int DiasRetraso);
 
-    // Calcula el resumen de un área — punto único de esta lógica.
+    // Resumen de un área
     public static ModeloResumen ComputeResumen(ModelRecord modelo, DetalleConfiguracion detalle)
     {
         var estatusBd = Aggregate(detalle.ImesModelsParents, detalle.ImesModelsMaster, detalle.ImesModelsSerialNumberSpecs, detalle.ImesModelsSerialNumberSpecsPacking);
@@ -164,7 +147,7 @@ public static class ConfigStatusHelper
         return new ModeloResumen(estatusBd, estatusPlataforma, estatusGeneral, fechaLimite, diasRetraso);
     }
 
-    // Detalle del área principal (SMT > BE > TLA). Vacío si no tiene nada capturado.
+    // Detalle del área principal, vacío si no hay
     public static DetalleConfiguracion ObtenerDetallePrincipal(ModelRecord modelo, IEnumerable<DetalleConfiguracion>? detalles)
     {
         var areaPrincipal = modelo.AreaPrincipal;
@@ -172,8 +155,7 @@ public static class ConfigStatusHelper
         return detalle ?? new DetalleConfiguracion { ModeloId = modelo.Id, Area = areaPrincipal };
     }
 
-    // Resumen de TODAS las áreas del modelo — solo llega a Terminado
-    // cuando todas las áreas lo están. Lo usan Modelos, Estadísticas y los reportes.
+    // Resumen de todo el modelo; Terminado solo si todas las áreas lo están
     public static ModeloResumen ComputeResumenModelo(ModelRecord modelo, IEnumerable<DetalleConfiguracion>? detallesDelModelo)
     {
         var fechaLimite = BusinessDayHelper.AddBusinessDays(modelo.FechaSolicitud, 5);
@@ -181,7 +163,7 @@ public static class ConfigStatusHelper
 
         if (areas.Count == 0)
         {
-            // No debería pasar, pero por si acaso:
+            // No debería pasar
             return new ModeloResumen(Pendiente, Pendiente, Pendiente, fechaLimite, 0);
         }
 
@@ -207,9 +189,7 @@ public static class ConfigStatusHelper
         var estatusPlataformaConsolidado = Combine(estatusPlataformaPorArea.ToArray());
         var estatusGeneralConsolidado = Combine(estatusGeneralPorArea.ToArray());
 
-        // Sin el PDF adjunto (el que justifica/evidencia la configuración),
-        // el modelo no puede considerarse Terminado aunque todos sus campos
-        // ya estén completos — se queda en Pendiente hasta que se adjunte.
+        // Sin PDF no cuenta como Terminado
         if (estatusGeneralConsolidado == Terminado && !modelo.TieneDocumentoAdjunto)
         {
             estatusGeneralConsolidado = Pendiente;
@@ -221,13 +201,13 @@ public static class ConfigStatusHelper
         return new ModeloResumen(estatusBdConsolidado, estatusPlataformaConsolidado, estatusGeneralConsolidado, fechaLimite, diasRetraso);
     }
 
-    // Estatus de un solo campo: responsable o No Aplica = Terminado
+    // Estatus de un campo: responsable o No Aplica = Terminado
     public static string EstatusDeCampo(string? valor) =>
         IsCompleted(valor) ? Terminado
         : valor == EnProceso ? EnProceso
         : Pendiente;
 
-    // Estatus de los 4 pasos de Configurar para un área
+    // Estatus de los 4 pasos de un área
     public static string[] EstatusPasos(DetalleConfiguracion detalle) => new[]
     {
         EstatusDeCampo(detalle.ImesModelsParents),
@@ -236,7 +216,7 @@ public static class ConfigStatusHelper
         AggregatePlataforma(detalle)
     };
 
-    // Lo mismo pero de todo el modelo: un paso está Terminado solo si lo está en todas sus áreas
+    // De todo el modelo: Terminado solo si lo está en todas las áreas
     public static string[] EstatusPasosModelo(ModelRecord modelo, IEnumerable<DetalleConfiguracion>? detalles)
     {
         var porArea = (detalles ?? Enumerable.Empty<DetalleConfiguracion>()).ToDictionary(d => d.Area, d => d);

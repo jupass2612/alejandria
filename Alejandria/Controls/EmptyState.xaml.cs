@@ -3,8 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Alejandria.Controls;
 
-// Ícono, título, mensaje y una acción opcional. Con IsLoading muestra el anillo.
-// Los valores se pasan a los controles en código (x:Bind interno no se refresca solo)
+// Ícono, título, mensaje y acción opcional; con IsLoading muestra el anillo.
+// Se pasa a los controles en código porque x:Bind interno no se refresca solo
 public sealed partial class EmptyState : UserControl
 {
     public event RoutedEventHandler? ActionClick;

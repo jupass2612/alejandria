@@ -4,18 +4,8 @@ using Alejandria.Models;
 
 namespace Alejandria.Services;
 
-// Cliente de la API de iMES (https://sqromx-imesweb.ad.one-bcs.com/imes-api/).
-// Por ahora solo trae work orders por número de parte (BuscarWorkOrdersAsync)
-// y busca modelo por serial (ObtenerModeloPorSerialAsync).
-//
-// Usa autenticación de Windows (UseDefaultCredentials) porque no hay un
-// /login con usuario/contraseña que funcione — es la misma sesión con la
-// que ya se entra a iMES sin escribir contraseña. Si algún día dan un
-// token fijo, se puede poner en ImesApi:BearerToken en appsettings.json.
-//
-// El HttpClient (SharedHttp) es uno solo para toda la app, no uno nuevo
-// por llamada — crear/destruir un HttpClient en cada clic es lento y
-// puede agotar sockets.
+// Cliente de la API de iMES: work orders por número de parte y modelo por serial.
+// Usa la sesión de Windows (no hay login); un solo HttpClient para toda la app
 public class ImesApiService
 {
     private static readonly HttpClient SharedHttp = new(new HttpClientHandler
@@ -26,11 +16,7 @@ public class ImesApiService
         Timeout = TimeSpan.FromSeconds(15)
     };
 
-    // Caché en memoria de resultados por número de parte — para no volver
-    // a llamar a la API si se entra y sale de la misma área varias veces
-    // en la misma sesión (ej. por la búsqueda automática al cambiar de área).
-    // Se comparte entre instancias porque se crea una ImesApiService nueva
-    // en cada búsqueda.
+    // Caché por número de parte para no repetir llamadas en la misma sesión
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (DateTime Expira, List<ImesWorkOrder> Resultado)> CacheWorkOrders = new(StringComparer.OrdinalIgnoreCase);
     private static readonly TimeSpan DuracionCache = TimeSpan.FromMinutes(5);
 
@@ -49,8 +35,7 @@ public class ImesApiService
         _bearerToken = bearerToken;
     }
 
-    // Work orders de un número de parte. Puede haber varios (uno por
-    // línea física). Usa FiltrarPorArea para quedarte solo con los de un área.
+    // Work orders del número de parte, uno por línea; filtrar con FiltrarPorArea
     public async Task<List<ImesWorkOrder>> BuscarWorkOrdersAsync(string numeroDeParte)
     {
         if (string.IsNullOrWhiteSpace(numeroDeParte))
@@ -85,12 +70,10 @@ public class ImesApiService
         return resultado.Data;
     }
 
-    // Por si alguien necesita forzar una consulta fresca (ej. un botón de
-    // "volver a intentar" tras un cambio reciente en iMES).
+    // Para forzar una consulta nueva
     public static void LimpiarCache() => CacheWorkOrders.Clear();
 
-    // Filtra por área usando el campo LINE (ej. "L5SMT", "Backend_QRO_1"),
-    // no el nombre del work order, porque ese estándar va a cambiar.
+    // Filtra por LINE (L5SMT, Backend_QRO_1), no por el nombre del WO
     public static List<ImesWorkOrder> FiltrarPorArea(IEnumerable<ImesWorkOrder> workOrders, string area)
     {
         var patrones = area switch
@@ -111,18 +94,14 @@ public class ImesApiService
             .ToList();
     }
 
-    // Busca a qué modelo pertenece un serial, para corroborar
-    // MODELS_SERIALNUMBERSPECS y su Packing. Null si no lo reconoce
-    // (404 o cuerpo vacío) o si iMES manda un objeto vacío.
+    // Modelo del serial; null si iMES no lo reconoce
     public async Task<ImesModeloPorSerial?> ObtenerModeloPorSerialAsync(string serialNumber)
     {
         var resultado = await ObtenerModeloPorSerialConPayloadAsync(serialNumber);
         return resultado.Modelo;
     }
 
-    // Igual que ObtenerModeloPorSerialAsync, pero además regresa TODOS los
-    // campos que trae la respuesta de iMES (no solo los 4 que se mapean),
-    // para poder mostrar el payload completo en pantalla.
+    // Igual pero con todos los campos del payload
     public async Task<(ImesModeloPorSerial? Modelo, List<(string Campo, string Valor)> CamposCompletos)> ObtenerModeloPorSerialConPayloadAsync(string serialNumber)
     {
         if (string.IsNullOrWhiteSpace(serialNumber))
@@ -157,9 +136,7 @@ public class ImesApiService
         return modelo is null || string.IsNullOrWhiteSpace(modelo.ModelName) ? (null, campos) : (modelo, campos);
     }
 
-    // Convierte el JSON completo de la respuesta a una lista plana de
-    // (campo, valor) para mostrarla — sin quedarse solo con los 4 campos
-    // que ya se usan para el resumen.
+    // JSON completo a lista de campo y valor
     private static List<(string Campo, string Valor)> ExtraerCamposDelPayload(string json)
     {
         var campos = new List<(string, string)>();
@@ -173,8 +150,7 @@ public class ImesApiService
         }
         catch (JsonException)
         {
-            // Si por alguna razón no se puede volver a parsear, se deja
-            // la lista vacía — el resumen normal sigue funcionando.
+            // Si no se puede parsear, lista vacía
         }
 
         return campos;
@@ -190,9 +166,7 @@ public class ImesApiService
         _ => valor.ToString()
     };
 
-    // La URL y el header de auth van en el request, no en el HttpClient
-    // compartido — si se pusieran ahí, dos llamadas al mismo tiempo se
-    // podrían pisar entre sí.
+    // URL y auth van en el request para que no se pisen dos llamadas
     private HttpRequestMessage CrearRequest(string rutaRelativa)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_baseUrl, rutaRelativa));
@@ -219,7 +193,7 @@ public class ImesApiService
         }
         catch (JsonException)
         {
-            // Cuerpo en un formato distinto — se usa el mensaje genérico de abajo.
+            // Otro formato, se usa el mensaje genérico
         }
 
         return $"iMES respondió con un error ({(int)status}). Verifica tu conexión de red/VPN a la empresa.";

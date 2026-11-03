@@ -3,13 +3,12 @@ using System.Text.RegularExpressions;
 
 namespace Alejandria.Services;
 
-// Maneja los PDF adjuntos por modelo. Se guardan como archivo normal en
-// una carpeta "Documentos" junto a la base de datos, no como BLOB en SQLite.
+// PDFs adjuntos en la carpeta Documentos junto a la base
 public static class DocumentAttachmentService
 {
     private const string CarpetaDocumentos = "Documentos";
 
-    // Copia el PDF a la carpeta compartida y devuelve el nombre con el que quedó.
+    // Copia el PDF y regresa el nombre con que quedó
     public static async Task<string> AdjuntarAsync(string databasePath, int modeloId, string archivoOrigen)
     {
         var carpeta = ObtenerCarpetaDocumentos(databasePath);
@@ -28,14 +27,14 @@ public static class DocumentAttachmentService
         return nombreGuardado;
     }
 
-    // Abre el PDF con el visor predeterminado de Windows.
+    // Abre el PDF con el visor de Windows
     public static void Abrir(string databasePath, string nombreArchivo)
     {
         var ruta = Path.Combine(ObtenerCarpetaDocumentos(databasePath), nombreArchivo);
         FileOpenService.Abrir(ruta);
     }
 
-    // Ruta completa en disco de un documento adjunto.
+    // Ruta completa del PDF
     public static string ObtenerRutaCompleta(string databasePath, string nombreArchivo) =>
         Path.Combine(ObtenerCarpetaDocumentos(databasePath), nombreArchivo);
 

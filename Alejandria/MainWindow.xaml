@@ -15,7 +15,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- ===================== Custom top app bar ===================== -->
+        <!-- Barra de título -->
         <Grid
             x:Name="AppTitleBar"
             Grid.Row="0"
@@ -28,7 +28,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- App icon + title -->
+            <!-- Logo y nombre -->
             <StackPanel
                 Grid.Column="0"
                 Orientation="Horizontal"
@@ -42,7 +42,7 @@
                     VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- Settings -->
+            <!-- Ajustes -->
             <StackPanel
                 Grid.Column="2"
                 Orientation="Horizontal"
@@ -60,7 +60,7 @@
                 </Button>
             </StackPanel>
 
-            <!-- Custom window caption buttons (replace the native min/max/close) -->
+            <!-- Botones de minimizar, maximizar y cerrar propios -->
             <StackPanel
                 x:Name="CaptionButtonsPanel"
                 Grid.Column="3"
@@ -90,7 +90,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- ===================== Nav + content ===================== -->
+        <!-- Menú y contenido -->
         <NavigationView
             x:Name="RootNavigationView"
             Grid.Row="1"

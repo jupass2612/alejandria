@@ -2,8 +2,7 @@ using System.Text.Json;
 
 namespace Alejandria.Services;
 
-// Lee (o crea) appsettings.json junto al ejecutable — ahí vive la ruta
-// de red a la base de datos compartida.
+// Lee o crea appsettings.json junto al .exe
 public class AppSettingsService
 {
     private readonly string _configPath;
@@ -11,16 +10,13 @@ public class AppSettingsService
     // Ruta de red de la base compartida
     public string DatabasePath { get; private set; } = string.Empty;
 
-    // URL base de la API de iMES. Vacío = "Buscar en iMES" se deshabilita.
+    // URL de la API de iMES; vacío deshabilita Buscar en iMES
     public string ImesApiBaseUrl { get; private set; } = string.Empty;
 
-    // Token Bearer opcional. Por defecto se usa autenticación de Windows;
-    // esto es un respaldo por si algún día dan un token fijo.
+    // Token opcional, normalmente va con la sesión de Windows
     public string ImesApiBearerToken { get; private set; } = string.Empty;
 
-    // Carpeta de red con el canal de actualizaciones de Velopack (ahí vive
-    // lo que genera "vpk pack" — ver Installer/LEEME-VELOPACK.md).
-    // Vacío = "Buscar actualización" avisa que no está configurado.
+    // Carpeta de red de actualizaciones de Velopack (lo que genera vpk pack)
     public string UpdatesFolder { get; private set; } = string.Empty;
 
     public AppSettingsService()
@@ -56,7 +52,7 @@ public class AppSettingsService
         }
         else
         {
-            // Archivo de antes de que existiera la integración con iMES.
+            // Config vieja sin ImesApi
             ImesApiBaseUrl = "https://sqromx-imesweb.ad.one-bcs.com/imes-api/";
             ImesApiBearerToken = string.Empty;
             faltaAlgo = true;
@@ -68,7 +64,7 @@ public class AppSettingsService
         }
         else
         {
-            // Archivo de antes de que existiera "Buscar actualización".
+            // Config vieja sin Updates
             UpdatesFolder = @"\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones";
             faltaAlgo = true;
         }
@@ -81,8 +77,7 @@ public class AppSettingsService
 
         if (faltaAlgo)
         {
-            // Se completa con los valores por defecto y se guarda, sin
-            // tocar el DatabasePath que ya tenía la computadora.
+            // Se completa y se guarda sin tocar DatabasePath
             GuardarConfigActual();
         }
 
@@ -116,9 +111,7 @@ public class AppSettingsService
         }
         catch (Exception)
         {
-            // No es grave si no se pudo escribir (ej. carpeta de solo
-            // lectura) — la app sigue funcionando con el valor por defecto
-            // en memoria, solo no queda guardado para la próxima vez.
+            // Si no se pudo escribir, sigue con lo que hay en memoria
         }
     }
 
@@ -126,8 +119,7 @@ public class AppSettingsService
     {
         var defaultConfig = new
         {
-            // Ruta de red compartida donde vive la base de datos de Altas de
-            // Modelos. Debe ser IDÉNTICA en cada computadora.
+            // Base compartida, igual en todas las PCs
             DatabasePath = @"\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\DB\altas_modelos.db",
             ImesApi = new
             {

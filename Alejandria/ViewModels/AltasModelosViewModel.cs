@@ -6,7 +6,7 @@ using Alejandria.Services;
 
 namespace Alejandria.ViewModels;
 
-// ViewModel de la pantalla principal: la tabla de seguimiento de altas de modelos.
+// Altas de Modelos
 public partial class AltasModelosViewModel : ObservableObject
 {
     private readonly AppSettingsService _settings = new();
@@ -20,7 +20,6 @@ public partial class AltasModelosViewModel : ObservableObject
     [ObservableProperty]
     private string? errorMessage;
 
-    // Se recalcula cuando ErrorMessage cambia.
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     partial void OnErrorMessageChanged(string? value)
@@ -29,7 +28,7 @@ public partial class AltasModelosViewModel : ObservableObject
         OnPropertyChanged(nameof(MostrarEstadoVacio));
     }
 
-    // Cargando, o sin altas todavía
+    // Cargando o sin altas
     public bool MostrarEstadoVacio => IsLoading || (!HasError && Records.Count == 0);
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(MostrarEstadoVacio));
@@ -139,7 +138,7 @@ public partial class AltasModelosViewModel : ObservableObject
         }
     }
 
-    // Copia el PDF a la carpeta compartida y guarda la referencia en el modelo.
+    // Copia el PDF a la carpeta compartida y lo liga al modelo
     public async Task<bool> AdjuntarDocumentoAsync(ModelRecord record, string archivoOrigen)
     {
         if (_database is null)
@@ -169,8 +168,7 @@ public partial class AltasModelosViewModel : ObservableObject
         }
     }
 
-    // Áreas de este modelo cuyo documento sigue marcado "Pendiente a
-    // correcciones" — para preguntar si ya se resolvió al adjuntar un PDF nuevo.
+    // Áreas con el documento en Pendiente a correcciones, para preguntar si ya se corrigió
     public async Task<List<string>> ObtenerAreasPendientesDeCorreccionAsync(int modeloId)
     {
         if (_database is null)
@@ -185,7 +183,7 @@ public partial class AltasModelosViewModel : ObservableObject
             .ToList();
     }
 
-    // Regresa a "Correcto" el Estado del Documento de las áreas indicadas.
+    // Regresa el documento a Correcto en esas áreas
     public async Task ResetearEstadoDocumentoAsync(int modeloId, IEnumerable<string> areas)
     {
         if (_database is null)
@@ -206,7 +204,7 @@ public partial class AltasModelosViewModel : ObservableObject
         }
     }
 
-    // Abre el PDF adjunto con el visor predeterminado de Windows.
+    // Abre el PDF con el visor de Windows
     public void AbrirDocumento(ModelRecord record)
     {
         try

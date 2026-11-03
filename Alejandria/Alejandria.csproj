@@ -14,18 +14,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <!-- Cambia esto en cada versión nueva (ver Installer/LEEME-VELOPACK.md) -->
+    <!-- Subirla en cada versión (ver Installer/LEEME-VELOPACK.md) -->
     <Version>1.22.0</Version>
-    <!-- Unpackaged desktop app: no MSIX required to run/debug -->
+    <!-- Sin MSIX, corre directo -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <GenerateAppInstallerFile>false</GenerateAppInstallerFile>
-    <!-- Se necesita un Main propio (ver Program.cs) para poder llamar
-         VelopackApp.Build().Run() antes de que arranque la UI. -->
+    <!-- Main propio en Program.cs para correr Velopack antes de la UI -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <!-- Aun con DISABLE_XAML_GENERATED_MAIN, el SDK puede seguir generando
-         otro Main en algún archivo obj\... — esto le dice al compilador,
-         sin ambigüedad, cuál usar como punto de entrada real. -->
+    <!-- Para que no choque con el Main que genera el SDK -->
     <StartupObject>Alejandria.Program</StartupObject>
   </PropertyGroup>
 
@@ -40,18 +37,13 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="PDFsharp-GDI" Version="6.2.4" />
-    <!-- PDFsharp solo sirve para CREAR PDFs (los reportes) — para LEER texto
-         de un PDF ya existente (el documento adjunto de un modelo, para
-         sacar de ahí el "Laser Serial Number real example") se usa PdfPig,
-         que sí soporta extracción de texto. -->
+    <!-- PdfPig para leer el PDF adjunto (PDFsharp solo crea) -->
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <!-- SSH/SFTP hacia servidores Linux -->
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
-    <!-- Empaquetado + actualizaciones automáticas. Reemplaza el instalador
-         de Inno Setup y el mecanismo de "Buscar actualización" hecho a
-         mano (ver Installer/LEEME-VELOPACK.md). -->
+    <!-- Instalador y actualizaciones (ver Installer/LEEME-VELOPACK.md) -->
     <PackageReference Include="Velopack" Version="0.0.1053" />
-    <!-- Empaquetado de Velopack desde el build (solo compilación, no va en la app) -->
+    <!-- Solo para empaquetar, no va en la app -->
     <PackageReference Include="Velopack.Build" Version="0.0.1369-g1d5c984">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

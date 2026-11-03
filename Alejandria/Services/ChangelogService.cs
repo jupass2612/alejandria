@@ -2,10 +2,8 @@ using System.Reflection;
 
 namespace Alejandria.Services;
 
-// Lee CHANGELOG.md (junto al .exe) para el botón "Ver notas de versión" en
-// Ajustes y para el "qué hay de nuevo" que sale al abrir después de una
-// actualización. El formato esperado es un encabezado "## X.Y.Z" por
-// versión, con los cambios de esa versión como lista debajo.
+// Lee CHANGELOG.md para las notas de versión.
+// Formato: "## X.Y.Z" y la lista abajo
 public static class ChangelogService
 {
     public static string VersionActualTexto =>
@@ -17,8 +15,7 @@ public static class ChangelogService
         return File.Exists(ruta) ? File.ReadAllText(ruta) : "No se encontró el historial de cambios (CHANGELOG.md).";
     }
 
-    // Solo las líneas bajo el encabezado "## {version}" — null si esa
-    // versión no aparece en el archivo.
+    // Las líneas de esa versión, null si no está
     public static string? ObtenerNotasDeVersion(string version)
     {
         var lineas = ObtenerChangelogCompleto().Split('\n');

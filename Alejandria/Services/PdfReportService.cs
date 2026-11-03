@@ -4,21 +4,20 @@ using PdfSharp.Pdf;
 
 namespace Alejandria.Services;
 
-// Genera el reporte PDF: portada estilo BCS (logo real en Assets/BcsLogo.jpg)
-// más una página por área con el detalle de la config y su estatus.
+// Reporte PDF: portada BCS y una página por área
 public static class PdfReportService
 {
-    private const double PageWidthPt = 595; // A4 a 72pt/pulgada
+    private const double PageWidthPt = 595; // A4 a 72pt por pulgada
     private const double PageHeightPt = 842;
     private const double MarginLeft = 40;
-    private const double LabelColumnWidth = 260; // Ancho suficiente para "MODELS_SERIALNUMBERSPECS Packing", la etiqueta más larga que se dibuja aquí.
+    private const double LabelColumnWidth = 260; // Cabe MODELS_SERIALNUMBERSPECS Packing
     private const double LineHeight = 22;
     private const string AccentHex = StatusColorHelper.AccentHex;
 
-    // Alto de la franja de encabezado (FECHA + logo BCS) en cada página de detalle.
+    // Alto de la franja de arriba (fecha + logo)
     private const double CompanyStripHeight = 34;
 
-    // alcanceDescripcion: null = reporte general, si no describe el alcance especializado.
+    // alcanceDescripcion null = reporte general
     public static void Export(
         string filePath,
         IReadOnlyList<ModelRecord> modelos,
@@ -52,21 +51,14 @@ public static class PdfReportService
             detallesPorModelo.TryGetValue(modelo.Id, out var detallesDelModelo);
             var detallesPorArea = (detallesDelModelo ?? new List<DetalleConfiguracion>()).ToDictionary(d => d.Area, d => d);
 
-            // Estatus del modelo completo (todas las áreas) — se muestra en
-            // cada página de este modelo para dar contexto, aunque cada
-            // página detalle una sola área.
+            // Estatus de todo el modelo en cada página
             var resumenModelo = ConfigStatusHelper.ComputeResumenModelo(modelo, detallesDelModelo);
             var areas = modelo.AreasDisponibles;
 
-            // Si CUALQUIER área del modelo quedó "Pendiente a correcciones",
-            // el aviso sale en TODAS las páginas de este modelo, no solo en
-            // la del área que lo causó — el documento le falta al modelo
-            // completo, no a un área en particular.
+            // Si un área tiene el documento pendiente, el aviso sale en todas las páginas del modelo
             var modeloTienePendiente = ConfigStatusHelper.TieneDocumentoPendienteCorreccion(detallesDelModelo);
 
-            // Una página COMPLETA por cada área que el modelo tenga (SMT, BE
-            // y/o TLA) — no solo la principal. Si "Polaris" tiene SMT y BE,
-            // salen 2 páginas, cada una con su propia configuración.
+            // Una página por área
             for (var i = 0; i < areas.Count; i++)
             {
                 var area = areas[i];
@@ -154,7 +146,7 @@ public static class PdfReportService
         public XFont Badge { get; } = new("Segoe UI", 9, XFontStyleEx.Bold);
         public XFont Footer { get; } = new("Segoe UI", 8, XFontStyleEx.Regular);
 
-        // Tipografías de la portada (formato controlado BCS)
+        // Fuentes de la portada
         public XFont StripText { get; } = new("Segoe UI", 7, XFontStyleEx.Regular);
         public XFont CompanyName { get; } = new("Segoe UI", 12, XFontStyleEx.Bold);
         public XFont CoverTitle { get; } = new("Segoe UI", 19, XFontStyleEx.Bold);
@@ -163,17 +155,14 @@ public static class PdfReportService
         public XFont CoverValue { get; } = new("Segoe UI", 9.5, XFontStyleEx.Regular);
     }
 
-    // Portada estilo BCS: FECHA, logo, título, dirección, tabla Autores/Owner/Aprobador y datos del reporte.
+    // Portada BCS: fecha, logo, título, dirección, autores y datos del reporte
     private static void DrawCoverPage(PdfDocument document, ReportFonts fonts, XImage? bcsLogo, IReadOnlyList<ModelRecord> modelos, IReadOnlyDictionary<int, List<DetalleConfiguracion>> detallesPorModelo, string? alcanceDescripcion)
     {
         var page = document.AddPage();
         SetA4(page);
         var gfx = XGraphics.FromPdfPage(page);
 
-        // Si CUALQUIER modelo incluido en este reporte tiene un documento
-        // pendiente de corrección, la portada también lleva el aviso —
-        // para que se note desde la primera hoja, sin tener que hojear
-        // todo el reporte para encontrar cuál lo tiene.
+        // Si algún modelo tiene el documento pendiente, el aviso sale también en la portada
         var algunoTienePendiente = modelos.Any(m =>
         {
             detallesPorModelo.TryGetValue(m.Id, out var detalles);
@@ -190,7 +179,7 @@ public static class PdfReportService
         double right = PageWidthPt - MarginLeft;
         double top = 40;
 
-        // --- Caja de encabezado controlado: FECHA | Empresa | Logo ---
+        // Encabezado: fecha, empresa y logo
         const double headerHeight = 70;
         gfx.DrawRectangle(pen, new XRect(left, top, right - left, headerHeight));
 
@@ -222,7 +211,7 @@ public static class PdfReportService
 
         double y = top + headerHeight + 24;
 
-        // --- Título ---
+        // Título
         gfx.DrawString(
             "BCS Automotive Interface Solutions Querétaro",
             fonts.CoverTitle,
@@ -236,7 +225,7 @@ public static class PdfReportService
         gfx.DrawString("Reporte de Configuración de Modelo", fonts.CoverSubtitle, XBrushes.Black, subtitleRect, XStringFormats.Center);
         y += 46;
 
-        // --- Dirección ---
+        // Dirección
         gfx.DrawString("Dirección:", fonts.CoverValue, XBrushes.Black, new XPoint(left, y));
         y += 15;
         foreach (var linea in new[]
@@ -252,13 +241,13 @@ public static class PdfReportService
         }
         y += 18;
 
-        // --- Tabla Autores / Owner / Aprobador (igual que el formato controlado de BCS) ---
+        // Autores, owner y aprobador
         y = DrawCoverRow(gfx, fonts, pen, left, right, y, "Autores:", "Alejandría — App de Seguimiento de Altas de Modelos");
         y = DrawCoverRow(gfx, fonts, pen, left, right, y, "Owner:", "Departamento de MES");
         y = DrawCoverRow(gfx, fonts, pen, left, right, y, "Aprobador:", "Reynaldo Barrera — MES Team Lead");
         y += 22;
 
-        // --- Datos propios de este reporte (el antecedente en sí) ---
+        // Datos del reporte
         gfx.DrawString("Datos de este reporte", fonts.CoverSubtitle, new XSolidBrush(ParseColor(AccentHex)), new XPoint(left, y));
         y += 20;
 
@@ -278,7 +267,7 @@ public static class PdfReportService
         }
     }
 
-    // Una fila de la tabla Autores/Owner/Aprobador.
+    // Fila de autores/owner/aprobador
     private static double DrawCoverRow(XGraphics gfx, ReportFonts fonts, XPen pen, double left, double right, double y, string label, string value)
     {
         const double rowHeight = 34;
@@ -289,7 +278,7 @@ public static class PdfReportService
         return y + rowHeight;
     }
 
-    // Una línea "Etiqueta: valor" con salto automático para valores largos.
+    // "Etiqueta: valor" con salto de línea
     private static double DrawInfoLine(XGraphics gfx, ReportFonts fonts, double left, double right, double y, string label, string value)
     {
         gfx.DrawString(label, fonts.CoverLabel, XBrushes.Black, new XPoint(left, y));
@@ -305,7 +294,7 @@ public static class PdfReportService
         return yValor + 8;
     }
 
-    // Franja delgada arriba de cada página de detalle (fecha + logo, versión compacta).
+    // Franja de arriba en las páginas de detalle
     private static void DrawCompanyStrip(XGraphics gfx, ReportFonts fonts, XImage? bcsLogo)
     {
         var pen = new XPen(ParseColor("#CBD5E1"), 0.75);
@@ -325,7 +314,7 @@ public static class PdfReportService
         }
     }
 
-    // Banda azul con el logo, "Alejandría" y el alcance del reporte.
+    // Banda azul con logo y alcance
     private static void DrawHeader(XGraphics gfx, ReportFonts fonts, XImage? logo, string? alcanceDescripcion)
     {
         var bannerBrush = new XSolidBrush(ParseColor(AccentHex));
@@ -354,7 +343,7 @@ public static class PdfReportService
         gfx.DrawString(pageNumber.ToString(), fonts.Footer, XBrushes.Gray, new XRect(0, PageHeightPt - 26, PageWidthPt - MarginLeft, 12), XStringFormats.TopRight);
     }
 
-    // campos: (etiqueta, valor, esEstatus) — esEstatus=true dibuja un badge, false texto simple.
+    // campos: (etiqueta, valor, esEstatus); esEstatus dibuja badge
     private static double WriteSection(XGraphics gfx, ReportFonts fonts, string title, double y, params (string Label, string Value, bool EsEstatus)[] campos)
     {
         var sectionBg = new XSolidBrush(ParseColor("#EFF6FF"));
@@ -382,9 +371,7 @@ public static class PdfReportService
         return y + 14;
     }
 
-    // Son solo un puñado de colores distintos (Terminado/Pendiente/etc.)
-    // pero DrawBadge se llama muchas veces por reporte — se reutiliza el
-    // mismo pincel por color en vez de crear uno nuevo cada vez.
+    // Un pincel por color, se reutiliza
     private static readonly Dictionary<string, XSolidBrush> BrushesPorHex = new();
 
     private static XSolidBrush ObtenerBrush(string hex)
@@ -398,10 +385,7 @@ public static class PdfReportService
         return brush;
     }
 
-    // Dibuja una pastilla de color con el valor del campo, o "Pendiente" si está vacío.
-    // En el PDF no se muestra el nombre de quien hizo la configuración —
-    // solo que ya quedó Terminado. El nombre se sigue guardando en la
-    // base de datos y se puede consultar desde "Ver detalles" en Histórico.
+    // Pastilla con el valor o Pendiente. En el PDF no sale quién lo hizo, eso está en Ver detalles
     private static void DrawBadge(XGraphics gfx, string value, double x, double y, XFont font)
     {
         var valorReal = string.IsNullOrWhiteSpace(value) ? ConfigStatusHelper.Pendiente : value;
@@ -423,8 +407,7 @@ public static class PdfReportService
 
     private static readonly XFont FontMarcaDeAgua = new("Segoe UI", 40, XFontStyleEx.Bold);
 
-    // Marca de agua diagonal, semitransparente, de fondo — se dibuja antes
-    // que el resto del contenido de la página para que quede detrás.
+    // Marca de agua, se dibuja primero para que quede atrás
     private static void DrawMarcaDeAguaPendiente(XGraphics gfx)
     {
         var state = gfx.Save();
@@ -438,16 +421,8 @@ public static class PdfReportService
         gfx.Restore(state);
     }
 
-    // Aviso claro (no solo la marca de agua) con el plazo de 24 horas —
-    // esto es lo que de verdad hay que leer, la marca de agua es solo
-    // para que no se pase por alto al ver la página de reojo.
-    //
-    // DrawString con un XRect y XStringFormats.Center NO ajusta el texto
-    // en varias líneas por sí solo (a diferencia de lo que parece sugerir
-    // la API) — si el texto no cabe en una sola línea, PDFsharp lo deja
-    // centrado y se desborda por ambos lados en vez de bajar de renglón.
-    // Por eso aquí se parte el texto a mano, línea por línea, midiendo
-    // cada una antes de dibujarla.
+    // Aviso de documento pendiente con el plazo de 24 h.
+    // DrawString con XRect no hace wrap, se parte el texto a mano
     private static double DrawAvisoDocumentoPendiente(XGraphics gfx, ReportFonts fonts, double y)
     {
         const string texto = "DOCUMENTO PENDIENTE DE CORRECCIÓN — Si no se recibe el documento corregido dentro de las próximas 24 horas, esta configuración se inhabilita.";
@@ -476,9 +451,7 @@ public static class PdfReportService
         return y + alto + 14;
     }
 
-    // Parte un texto en líneas que quepan dentro de anchoMaximo, palabra
-    // por palabra — para dibujarlas una por una en vez de confiar en que
-    // DrawString las ajuste solo (no lo hace de forma confiable con XRect).
+    // Parte el texto en líneas que quepan
     private static List<string> WrapText(XGraphics gfx, string texto, XFont fuente, double anchoMaximo)
     {
         var palabras = texto.Split(' ');
@@ -516,7 +489,7 @@ public static class PdfReportService
         }
         catch (Exception)
         {
-            // Las imágenes son decorativas — si algo falla al cargarlas, el reporte se genera sin ellas.
+            // Las imágenes son decorativas
             return null;
         }
     }

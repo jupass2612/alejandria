@@ -14,8 +14,7 @@
                 Style="{ThemeResource CaptionTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextWrapping="Wrap" />
-            <!-- Las tarjetas por área se agregan aquí en código, una por
-                 cada área que tenga el modelo. Todo de solo lectura. -->
+            <!-- Las tarjetas por área se agregan en código, solo lectura -->
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>

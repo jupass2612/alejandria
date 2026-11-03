@@ -2,9 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Alejandria.Models;
 
-// Un work order de iMES. Un número de parte puede tener varios (uno por
-// línea física), por eso el área se determina por Line, no por el
-// nombre del work order. Solo se mapean los campos que se usan.
+// Work order de iMES; el área sale de LINE, no del nombre
 public class ImesWorkOrder
 {
     [JsonPropertyName("WORK_ORDER")]
@@ -13,7 +11,7 @@ public class ImesWorkOrder
     [JsonPropertyName("IPN")]
     public string Ipn { get; set; } = string.Empty;
 
-    // La línea física — determina a qué área pertenece este work order.
+    // Línea física, de aquí sale el área
     [JsonPropertyName("LINE")]
     public string Line { get; set; } = string.Empty;
 
@@ -30,7 +28,7 @@ public class ImesWorkOrder
     public string WoCreateDate { get; set; } = string.Empty;
 }
 
-// El sobre de respuesta de la API de iMES: {success, code, msg, data:[...]}.
+// Respuesta de la API: success, code, msg, data
 public class ImesApiResponse<T>
 {
     [JsonPropertyName("success")]
@@ -46,7 +44,7 @@ public class ImesApiResponse<T>
     public List<T> Data { get; set; } = new();
 }
 
-// Error de validación de iMES cuando falta un parámetro (HTTP 400).
+// Error 400 cuando falta un parámetro
 public class ImesValidationError
 {
     [JsonPropertyName("title")]

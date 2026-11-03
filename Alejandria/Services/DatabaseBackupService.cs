@@ -1,9 +1,6 @@
 namespace Alejandria.Services;
 
-// Respaldo diario de la base de datos compartida — una copia con fecha
-// en una carpeta "Respaldos" junto a la base, se queda con los últimos
-// 30 días. Corre en segundo plano al arrancar, sin detener la app si
-// la red falla o algo sale mal.
+// Respaldo diario de la base en Respaldos, se queda con 30 días
 public static class DatabaseBackupService
 {
     private const int DiasARetener = 30;
@@ -30,8 +27,7 @@ public static class DatabaseBackupService
             var extension = Path.GetExtension(rutaBaseDatos);
             var rutaRespaldoHoy = Path.Combine(carpetaRespaldos, $"{nombreBase}_{DateTime.Now:yyyy-MM-dd}{extension}");
 
-            // Ya hay un respaldo de hoy — no hace falta repetirlo cada vez
-            // que alguien abre la app.
+            // Ya hay respaldo de hoy
             if (!File.Exists(rutaRespaldoHoy))
             {
                 await Task.Run(() => File.Copy(rutaBaseDatos, rutaRespaldoHoy, overwrite: false));
@@ -42,7 +38,7 @@ public static class DatabaseBackupService
         }
         catch (Exception ex)
         {
-            // Un respaldo fallido no debe tumbar la app — se registra y ya.
+            // Si falla, solo queda en el log
             LogService.LogError("DatabaseBackupService.RespaldarSiHaceFaltaAsync", ex);
         }
     }

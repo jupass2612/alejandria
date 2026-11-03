@@ -3,15 +3,15 @@ using Alejandria.Models;
 
 namespace Alejandria.Services;
 
-// Plantillas para armar MODELS_SERIALNUMBERSPECS a partir de un serial real
+// Plantilla de MODELS_SERIALNUMBERSPECS por cliente
 public class SerialSpecPlantilla
 {
     public string Nombre { get; init; } = string.Empty;
 
-    // Regresa las filas o el motivo por el que el serial no sirve
+    // Filas o el motivo por el que el serial no sirve
     public Func<string, (List<SpecPreviewFila> Filas, string? Error)> Previsualizar { get; init; } = _ => (new(), null);
 
-    // Arma el INSERT con el serial y el MODELID
+    // INSERT con el serial y el MODELID
     public Func<string, int, string> GenerarSql { get; init; } = (_, _) => string.Empty;
 
     public override string ToString() => Nombre;
@@ -21,10 +21,10 @@ public static class SerialSpecPlantillas
 {
     public static IReadOnlyList<SerialSpecPlantilla> Todas { get; } = new[] { Tesla(), Gm() };
 
-    // Comilla simple escapada para meterla en el literal de SQL
+    // Escapa la comilla simple para SQL
     private static string Sql(string serial) => serial.Replace("'", "''");
 
-    // Tesla: posiciones fijas, se corta con SUBSTR
+    // Tesla: posiciones fijas con SUBSTR
     private static SerialSpecPlantilla Tesla()
     {
         // (descripción, inicio, longitud, dinámico, guarda valor)
@@ -83,7 +83,7 @@ public static class SerialSpecPlantillas
         };
     }
 
-    // GM: código 2D con separadores, se parte con regex (misma que en Oracle)
+    // GM: código 2D con separadores, misma regex que en Oracle
     private static SerialSpecPlantilla Gm()
     {
         const string patron =
@@ -116,7 +116,7 @@ public static class SerialSpecPlantillas
                 {
                     var valor = match.Groups[s.Grupo].Value;
 
-                    // El sufijo se queda solo con letras y números
+                    // Sufijo solo con letras y números
                     if (s.Grupo == 7)
                     {
                         valor = Regex.Replace(valor, "[^A-Za-z0-9]", string.Empty);

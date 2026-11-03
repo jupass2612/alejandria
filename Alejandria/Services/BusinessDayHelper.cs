@@ -1,9 +1,9 @@
 namespace Alejandria.Services;
 
-// Cálculo del plazo (días hábiles) y de los días de retraso una vez que se vence.
+// Plazo en días hábiles y días de retraso
 public static class BusinessDayHelper
 {
-    // Suma N días hábiles (sin sábado ni domingo).
+    // Suma días hábiles (sin sábado ni domingo)
     public static DateTime AddBusinessDays(DateTime start, int businessDays)
     {
         var date = start.Date;
@@ -21,7 +21,7 @@ public static class BusinessDayHelper
         return date;
     }
 
-    // Días de retraso. 0 si ya está Terminada o si todavía no se vence.
+    // 0 si ya está terminada o no se vence
     public static int DiasDeRetraso(DateTime fechaLimite, bool terminado, DateTime? hoy = null)
     {
         if (terminado)

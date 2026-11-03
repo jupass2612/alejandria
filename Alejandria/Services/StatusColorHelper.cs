@@ -1,8 +1,6 @@
 namespace Alejandria.Services;
 
-// Colores por estatus, en un solo lugar para que badges y reportes se
-// vean consistentes. Los reportes siempre usan la paleta en modo claro
-// (se leen mejor sobre blanco/impreso).
+// Colores por estatus en un solo lugar; los reportes siempre van en claro
 public static class StatusColorHelper
 {
     public const string AccentHex = "#2563EB";
@@ -13,8 +11,8 @@ public static class StatusColorHelper
         ConfigStatusHelper.EnProceso => "#F59E0B", // Warning
         ConfigStatusHelper.Bloqueado => "#EF4444", // Danger
         ConfigStatusHelper.NoAplica => "#0EA5E9", // Info
-        _ when Array.IndexOf(ConfigStatusHelper.Responsables, status) >= 0 => "#22C55E", // Success (persona = terminado)
-        _ => "#94A3B8" // Pendiente / desconocido — Disabled
+        _ when Array.IndexOf(ConfigStatusHelper.Responsables, status) >= 0 => "#22C55E", // Persona = terminado
+        _ => "#94A3B8" // Pendiente o desconocido
     };
 
     public static (byte R, byte G, byte B) GetRgb(string status)

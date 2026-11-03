@@ -7,17 +7,16 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Alejandria.Views;
 
-// Formulario para crear un modelo nuevo a partir de uno en Histórico
-// cuando cambió el número de parte de alguna área. Solo se marcan las
-// áreas que en verdad cambiaron; las demás conservan su número de parte.
+// Modelo nuevo a partir de uno en Histórico cuando cambió el número de parte.
+// Solo cambian las áreas marcadas
 public sealed partial class UpdateModelDialog : ContentDialog
 {
     private readonly ModelRecord _original;
 
-    // El modelo nuevo a insertar, disponible después de "Crear actualización".
+    // El modelo nuevo, después de Crear actualización
     public ModelRecord? Result { get; private set; }
 
-    // Las áreas marcadas como cambiadas — las demás heredan la config original.
+    // Áreas que cambiaron, las demás heredan la config
     public HashSet<string> AreasCambiadas { get; } = new();
 
     public UpdateModelDialog(ModelRecord original)
@@ -25,7 +24,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
         InitializeComponent();
         _original = original;
 
-        // Misma lista que los selectores de Configurar
+        // Misma lista que Configurar
         QuienRecibeBox.ItemsSource = ConfigStatusHelper.Responsables;
 
         ModeloOrigenText.Text =
@@ -40,7 +39,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
         SugerirNombre();
     }
 
-    // Oculta la fila si el modelo original no tiene esa área.
+    // Oculta la fila si el original no tiene esa área
     private static void ConfigurarFila(StackPanel fila, TextBox nuevoBox, string numeroActual)
     {
         if (string.IsNullOrWhiteSpace(numeroActual))
@@ -60,7 +59,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
         SugerirNombre();
     }
 
-    // Recalcula el nombre sugerido cuando cambian los checkboxes.
+    // Nombre sugerido según los checkboxes
     private void SugerirNombre()
     {
         var areas = new List<string>();
@@ -73,7 +72,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
             : $"{_original.NombreModelo} — Actualización de {string.Join("/", areas)}";
     }
 
-    // Si el área se marcó como cambiada, el número nuevo; si no, el original.
+    // Número nuevo si cambió, si no el original
     private static (string Numero, bool Cambio) ResolverArea(CheckBox check, TextBox nuevoBox, string numeroOriginal)
     {
         if (check.IsChecked == true)
@@ -111,7 +110,7 @@ public sealed partial class UpdateModelDialog : ContentDialog
         if (beCambio) AreasCambiadas.Add("BE");
         if (tlaCambio) AreasCambiadas.Add("TLA");
 
-        // Mismo criterio de prioridad que en el resto de la app: SMT > BE > TLA.
+        // Prioridad SMT > BE > TLA
         var numeroModelo = !string.IsNullOrWhiteSpace(smt) ? smt
             : !string.IsNullOrWhiteSpace(be) ? be
             : tla;

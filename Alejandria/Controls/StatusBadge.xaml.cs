@@ -15,9 +15,7 @@ public sealed partial class StatusBadge : UserControl
 
     private static void OnStatusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        // x:Bind Mode=OneWay a una DependencyProperty NO se refresca solo
-        // cuando cambia después de creado el control — hace falta avisarle
-        // explícitamente que vuelva a evaluar los bindings internos.
+        // x:Bind OneWay a una DP no se refresca solo, hay que llamar Bindings.Update()
         ((StatusBadge)d).Bindings.Update();
     }
 

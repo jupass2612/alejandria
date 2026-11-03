@@ -5,8 +5,7 @@ using Alejandria.Services;
 
 namespace Alejandria.ViewModels;
 
-// ViewModel de "Configurar modelo": base de datos iMES y Plataforma iMES.
-// Cada área (SMT, BE, TLA) tiene su propia config, por eso hay un combo de área.
+// Configurar modelo; cada área tiene su propia config
 public partial class ModelConfigViewModel : ObservableObject
 {
     private readonly AppSettingsService _settings = new();
@@ -15,14 +14,13 @@ public partial class ModelConfigViewModel : ObservableObject
     public ModelRecord Modelo { get; private set; } = new();
     public DetalleConfiguracion Detalle { get; private set; } = new();
 
-    // Áreas con número de parte, para llenar el combo de área.
+    // Áreas con número de parte para el combo
     public List<string> AreasDisponibles { get; private set; } = new();
 
     [ObservableProperty]
     private string areaSeleccionada = string.Empty;
 
-    // SMT le dice "Ruta" al dato de iMES (ROUTE_NAME); BE y TLA le dicen
-    // "Flujo" al mismo dato — controla qué campo se muestra en pantalla.
+    // SMT le dice Ruta y BE/TLA Flujo al mismo ROUTE_NAME
     public bool EsAreaSmt => ConfigStatusHelper.EsAreaSmt(AreaSeleccionada);
     public bool EsAreaBeOTla => !EsAreaSmt;
 
@@ -32,16 +30,12 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(EsAreaBeOTla));
     }
 
-    // Work Order/Ruta/Línea normalmente son de solo lectura (se llenan con
-    // "Buscar en iMES") — esto se pone en true solo cuando el usuario elige
-    // "Ingresar manual" en el aviso que sale si esa búsqueda no encuentra
-    // nada. Se vuelve a bloquear al cambiar de área o al encontrar algo en iMES.
+    // Work Order/Ruta/Línea solo se capturan a mano si eligen Ingresar manual.
+    // Se bloquea otra vez al cambiar de área o al encontrar algo
     [ObservableProperty]
     private bool permiteCapturaManualPlataforma;
 
-    // El compilador de XAML de esta versión del Windows App SDK no admite
-    // "!" dentro de x:Bind — se expone ya negada para poder enlazarla
-    // directo a IsReadOnly sin necesitar un converter aparte.
+    // x:Bind no acepta "!", va ya negada
     public bool CamposPlataformaSoloLectura => !PermiteCapturaManualPlataforma;
 
     partial void OnPermiteCapturaManualPlataformaChanged(bool value)
@@ -62,7 +56,7 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private bool isBuscandoImes;
 
-    // Si no hay URL de iMES en appsettings.json, se oculta el botón "Buscar en iMES".
+    // Sin URL de iMES se oculta Buscar en iMES
     public bool ImesApiDisponible => !string.IsNullOrWhiteSpace(_settings.ImesApiBaseUrl);
 
     [ObservableProperty]
@@ -70,7 +64,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
     partial void OnSerialPruebaChanged(string value) => ActualizarPreviewSpecs();
 
-    // Vista previa de MODELS_SERIALNUMBERSPECS con el mismo serial
+    // Vista previa de MODELS_SERIALNUMBERSPECS
     public IReadOnlyList<SerialSpecPlantilla> Plantillas => SerialSpecPlantillas.Todas;
 
     [ObservableProperty]
@@ -81,7 +75,7 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string modelIdTexto = string.Empty;
 
-    // Se guarda en el área para que el Paso 3 lo use sin volver a escribirlo
+    // Se guarda en el área para que el Paso 3 lo use
     partial void OnModelIdTextoChanged(string value)
     {
         Detalle.ImesModelId = value?.Trim() ?? string.Empty;
@@ -106,7 +100,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
     partial void OnSqlSpecsChanged(string value) => OnPropertyChanged(nameof(TieneSqlSpecs));
 
-    // Recalcula la tabla y el INSERT con lo que haya capturado
+    // Recalcula la tabla y el INSERT
     private void ActualizarPreviewSpecs()
     {
         PreviewSpecs.Clear();
@@ -114,7 +108,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
         try
         {
-            // Se piden en orden: serial, plantilla y MODELID
+            // En orden: serial, plantilla y MODELID
             var serial = SerialPrueba.Trim();
             if (string.IsNullOrEmpty(serial))
             {
@@ -170,7 +164,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
     public bool TieneResultadoSerial => !string.IsNullOrEmpty(ResultadoSerialMensaje);
 
-    // El payload completo que regresó iMES, para revisar qué contestó
+    // Payload completo que regresó iMES
     public ObservableCollection<ImesCampoPayload> PayloadSerial { get; } = new();
 
     partial void OnResultadoSerialMensajeChanged(string? value)
@@ -178,7 +172,7 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(TieneResultadoSerial));
     }
 
-    // Si el último serial se reconoció en iMES (color del mensaje y payload)
+    // Si iMES reconoció el serial
     [ObservableProperty]
     private bool resultadoSerialEncontrado;
 
@@ -195,7 +189,7 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(HasError));
     }
 
-    // Configurar modelo va por pasos: 1 Parents, 2 Master, 3 SerialSpecs, 4 Plataforma
+    // Pasos: 1 Parents, 2 Master, 3 SerialSpecs, 4 Plataforma
     public const int TotalPasos = 4;
 
     [ObservableProperty]
@@ -232,7 +226,7 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string estatusPaso4 = ConfigStatusHelper.Pendiente;
 
-    // Primer paso que falta, para abrir directo ahí
+    // Primer paso que falta
     private int PrimerPasoPendiente()
     {
         var estatus = new[] { EstatusPaso1, EstatusPaso2, EstatusPaso3, EstatusPaso4 };
@@ -246,12 +240,11 @@ public partial class ModelConfigViewModel : ObservableObject
     [ObservableProperty]
     private string estatusGeneral = ConfigStatusHelper.Pendiente;
 
-    // Estatus de TODO el modelo (todas las áreas), no solo la que se ve ahora.
+    // Estatus de todas las áreas
     [ObservableProperty]
     private string estatusGeneralModelo = ConfigStatusHelper.Pendiente;
 
-    // Otra área con el mismo número de parte y config ya capturada, para
-    // ofrecer copiarla en vez de repetir el trabajo. Null si no aplica.
+    // Otra área con el mismo número de parte y config, para copiarla
     [ObservableProperty]
     private string? areaConfigCopiable;
 
@@ -304,9 +297,7 @@ public partial class ModelConfigViewModel : ObservableObject
             _database = new ModelDatabaseService(_settings.DatabasePath);
             await _database.InitializeAsync();
 
-            // Arranca en la primera área que todavía tenga algo pendiente
-            // (en vez de siempre la principal) — así se llega directo a lo
-            // que falta, en vez de tener que cambiar de área a mano.
+            // Abre en la primera área que tenga algo pendiente
             var areaInicial = await ElegirAreaInicialAsync(modelo);
             await CargarAreaAsync(areaInicial);
         }
@@ -343,12 +334,11 @@ public partial class ModelConfigViewModel : ObservableObject
             }
         }
 
-        // Todas las áreas ya están completas — se abre en la principal, como antes.
+        // Si todo está completo, la principal
         return modelo.AreaPrincipal;
     }
 
-    // Carga la config de un área (o crea una en blanco si no tiene nada
-    // todavía). Se usa al abrir la pantalla y al cambiar de área.
+    // Carga la config del área o una en blanco
     public async Task CargarAreaAsync(string area)
     {
         if (_database is null)
@@ -382,8 +372,7 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Recalcula el estatus de todo el modelo y checa si otra área comparte
-    // número de parte con la actual (para ofrecer copiar su config).
+    // Estatus del modelo y si otra área comparte número de parte
     private async Task RefreshDerivedDataAsync()
     {
         if (_database is null)
@@ -430,7 +419,7 @@ public partial class ModelConfigViewModel : ObservableObject
         }
         catch (Exception)
         {
-            // No es grave, se deja el último valor conocido.
+            // No es grave, se queda el último valor
         }
     }
 
@@ -456,8 +445,7 @@ public partial class ModelConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(ResumenFaltantesGlyph));
     }
 
-    // Para el resumen de "qué falta" arriba de la pantalla — evita tener
-    // que recorrer toda la página para ver qué le hace falta a esta área.
+    // Para el resumen de qué falta
     private List<string> CamposFaltantes
     {
         get
@@ -496,16 +484,14 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Para el color del texto/ícono (reutiliza KpiTonoToBrushConverter, que
-    // ya sabe pintar "Success"/"Warning").
+    // Color con KpiTonoToBrushConverter
     public string ResumenFaltantesTono => CamposFaltantes.Count == 0 ? "Success" : "Warning";
 
-    // Glifo de Segoe Fluent Icons: palomita si ya está completo, aviso si falta algo.
+    // Palomita si está completo, aviso si falta algo
     public string ResumenFaltantesGlyph => CamposFaltantes.Count == 0 ? "\uE73E" : "\uE7BA";
 
-    // Busca en iMES los work orders del número de parte actual y deja solo
-    // los del área elegida (por el campo LINE, no por el nombre del WO).
-    // Puede haber varios (varias líneas físicas de la misma área).
+    // Work orders del número de parte, solo los del área (por LINE).
+    // Puede haber varios, uno por línea
     public async Task<List<ImesWorkOrder>> BuscarEnImesAsync()
     {
         var numeroParte = Modelo.GetNumeroParte(AreaSeleccionada);
@@ -545,9 +531,7 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Copia lo encontrado en iMES a la pantalla (no guarda todavía). El
-    // Work Order y la Ruta se repiten entre líneas de la misma área, solo
-    // cambia la Línea, así que se juntan todas separadas por coma.
+    // Pasa lo de iMES a pantalla sin guardar; las líneas se juntan separadas por coma
     public void AplicarWorkOrdersImes(List<ImesWorkOrder> workOrders)
     {
         if (workOrders.Count == 0)
@@ -555,7 +539,7 @@ public partial class ModelConfigViewModel : ObservableObject
             return;
         }
 
-        // Ya hay datos reales de iMES — se vuelve a bloquear la captura manual.
+        // Ya hay datos de iMES, se bloquea la captura manual
         PermiteCapturaManualPlataforma = false;
 
         var lineas = workOrders
@@ -578,8 +562,7 @@ public partial class ModelConfigViewModel : ObservableObject
 
         Detalle.WorkOrder = workOrdersDistintos.FirstOrDefault() ?? string.Empty;
 
-        // SMT le dice "Ruta" a este dato; BE y TLA le dicen "Flujo" —
-        // mismo ROUTE_NAME de iMES, solo cambia dónde se guarda según el área.
+        // SMT lo guarda en Ruta, BE/TLA en Flujo
         if (EsAreaSmt)
         {
             Detalle.Ruta = rutas.FirstOrDefault() ?? string.Empty;
@@ -592,9 +575,7 @@ public partial class ModelConfigViewModel : ObservableObject
         Detalle.Linea = string.Join(", ", lineas);
         RecomputeStatuses();
 
-        // Si salió más de un Work Order distinto, probablemente hay
-        // work orders viejos mezclados con nuevos — se avisa en vez de
-        // elegir uno en silencio.
+        // Si salen varios WO distintos se avisa, puede haber viejos activos
         var aviso = workOrdersDistintos.Count > 1
             ? $" Aviso: iMES tiene {workOrdersDistintos.Count} work orders distintos para estas líneas (se usó \"{Detalle.WorkOrder}\") — puede que haya work orders con el nombre anterior todavía activos; verifica que sea el correcto."
             : string.Empty;
@@ -604,7 +585,7 @@ public partial class ModelConfigViewModel : ObservableObject
             : $"Se aplicó desde iMES ({Detalle.Linea}).{aviso} Revisa y guarda para confirmarlo.";
     }
 
-    // Prueba un serial contra iMES para corroborar MODELS_SERIALNUMBERSPECS y su Packing.
+    // Prueba el serial en iMES
     public async Task ProbarSerialAsync()
     {
         ResultadoSerialMensaje = null;
@@ -657,7 +638,7 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Saca del PDF adjunto los candidatos a serial de ejemplo
+    // Seriales de ejemplo del PDF adjunto
     public List<SerialCandidato> ExtraerCandidatosSerialDelPdf()
     {
         ErrorMessage = null;
@@ -719,8 +700,7 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Copia en memoria la config de otra área con el mismo número de
-    // parte (no guarda todavía).
+    // Copia en memoria la config de otra área (no guarda)
     public async Task<bool> CopiarConfiguracionDeAsync(string areaOrigen)
     {
         if (_database is null)
@@ -737,10 +717,7 @@ public partial class ModelConfigViewModel : ObservableObject
                 return false;
             }
 
-            // El dato de ruta/flujo puede venir del campo con el nombre
-            // distinto si el área de origen es de otro tipo (SMT le dice
-            // "Ruta", BE/TLA le dicen "Flujo" al mismo valor) — se traduce
-            // al campo que le corresponde al área de destino.
+            // Ruta/Flujo se pasa al campo que toque según el área destino
             var valorRutaOFlujoOrigen = ConfigStatusHelper.EsAreaSmt(origen.Area) ? origen.Ruta : origen.Flujo;
 
             Detalle = new DetalleConfiguracion

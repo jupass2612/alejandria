@@ -1,6 +1,6 @@
 namespace Alejandria.Models;
 
-// Un registro de alta de modelo, tal como se guarda en la base compartida.
+// Alta de modelo como se guarda en la base
 public class ModelRecord
 {
     public int Id { get; set; }
@@ -9,7 +9,7 @@ public class ModelRecord
 
     public string NombreModelo { get; set; } = string.Empty;
 
-    // Vacío si esa área no aplica a este modelo.
+    // Vacío si el área no aplica
     public string NumeroParteSmt { get; set; } = string.Empty;
     public string NumeroParteBe { get; set; } = string.Empty;
     public string NumeroParteTla { get; set; } = string.Empty;
@@ -20,12 +20,12 @@ public class ModelRecord
 
     public string QuienMandoDocumento { get; set; } = string.Empty;
 
-    // Nombre del PDF guardado en la carpeta "Documentos". Vacío si no hay nada.
+    // Nombre del PDF en la carpeta Documentos, vacío si no hay
     public string DocumentoAdjunto { get; set; } = string.Empty;
 
     public bool TieneDocumentoAdjunto => !string.IsNullOrWhiteSpace(DocumentoAdjunto);
 
-    // Nombre del archivo sin el prefijo interno (Id + fecha).
+    // Nombre del archivo sin el prefijo (Id + fecha)
     public string NombreDocumentoMostrado
     {
         get
@@ -35,7 +35,7 @@ public class ModelRecord
                 return string.Empty;
             }
 
-            // El archivo se guarda como "{Id}_{yyyyMMddHHmmss}_{nombreOriginal}.pdf".
+            // Se guarda como {Id}_{yyyyMMddHHmmss}_{nombre}.pdf
             var partes = DocumentoAdjunto.Split('_', 3);
             return partes.Length == 3 ? partes[2] : DocumentoAdjunto;
         }
@@ -45,7 +45,7 @@ public class ModelRecord
 
     public string FechaSolicitudTexto => FechaSolicitud.ToString("dd/MM/yyyy");
 
-    // Áreas que aplican a este modelo, para tablas y reportes.
+    // Áreas del modelo para tablas y reportes
     public string AreasAplicablesTexto
     {
         get
@@ -55,9 +55,7 @@ public class ModelRecord
         }
     }
 
-    // Áreas con número de parte. Si el modelo tiene SMT y BE capturados,
-    // se combinan en una sola "SMT-BE" (mismo MODELS_MASTER en iMES, con
-    // el número de BE en Model Part Number 2) en vez de dos separadas.
+    // Áreas con número de parte. SMT y BE juntos son SMT-BE (mismo MODELS_MASTER, BE va en Part Number 2)
     public List<string> AreasDisponibles
     {
         get
@@ -84,7 +82,7 @@ public class ModelRecord
         }
     }
 
-    // Área principal: SMT-BE (o SMT/BE solos) si la tiene, si no TLA.
+    // SMT-BE (o SMT/BE) si hay, si no TLA
     public string AreaPrincipal
     {
         get
@@ -96,8 +94,7 @@ public class ModelRecord
 
     public string NumeroParteMostrado => GetNumeroParte(AreaPrincipal);
 
-    // El número de parte "principal" del área — para SMT-BE es el de SMT
-    // (el que se usa para buscar en iMES y como Model Part Number).
+    // Número de parte principal del área; en SMT-BE es el de SMT
     public string GetNumeroParte(string area) => area switch
     {
         "SMT" => NumeroParteSmt,
@@ -107,24 +104,23 @@ public class ModelRecord
         _ => string.Empty
     };
 
-    // Solo aplica a SMT-BE: el número de BE, que va en Model Part Number 2.
+    // Solo SMT-BE: el número de BE para Part Number 2
     public string GetNumeroParteSecundario(string area) => area switch
     {
         "SMT-BE" => NumeroParteBe,
         _ => string.Empty
     };
 
-    // Lo calculan los ViewModels (necesitan la config de todas las áreas)
-    // y se guarda aquí para que la interfaz sepa que ya pasó a Histórico.
+    // Lo ponen los ViewModels para saber si ya está en Histórico
     public bool EsHistorico { get; set; }
 
     public bool PuedeEditar => !EsHistorico;
 
-    // En Histórico solo se ve el botón de documento si ya había un PDF (verlo no es editar).
+    // En Histórico solo si ya tiene PDF (verlo no es editar)
     public bool MostrarBotonDocumento => !EsHistorico || TieneDocumentoAdjunto;
 
     public bool PuedeReemplazarDocumento => TieneDocumentoAdjunto && !EsHistorico;
 
-    // Si el menú "⋯" de la fila tiene algo que mostrar
+    // Si el menú ⋯ tiene algo que mostrar
     public bool TieneAcciones => PuedeEditar || MostrarBotonDocumento;
 }

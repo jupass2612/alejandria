@@ -6,13 +6,13 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Alejandria.Views;
 
-// Formulario para dar de alta un modelo o editar uno existente.
+// Alta o edición de modelo
 public sealed partial class AddModelDialog : ContentDialog
 {
     private readonly int _editingId;
     private readonly IReadOnlyList<ModelRecord> _existingRecords;
 
-    // El registro capturado, disponible después de "Guardar".
+    // Lo capturado, después de Guardar
     public ModelRecord? Result { get; private set; }
 
     public AddModelDialog() : this(null, Array.Empty<ModelRecord>())
@@ -28,7 +28,7 @@ public sealed partial class AddModelDialog : ContentDialog
         InitializeComponent();
         _existingRecords = existingRecords;
 
-        // Misma lista que los selectores de Configurar
+        // Misma lista que Configurar
         QuienRecibeBox.ItemsSource = ConfigStatusHelper.Responsables;
 
         if (existing is not null)
@@ -45,8 +45,7 @@ public sealed partial class AddModelDialog : ContentDialog
             FechaSolicitudPicker.Date = new DateTimeOffset(existing.FechaSolicitud);
             QuienMandaBox.Text = existing.QuienMandoDocumento;
 
-            // Si ya coinciden, se marca el checkbox solo — así queda claro
-            // que es la misma pieza y sigue en sincronía si se edita SMT.
+            // Si ya coinciden, se marca el checkbox
             if (!string.IsNullOrWhiteSpace(existing.NumeroParteSmt) && existing.NumeroParteSmt == existing.NumeroParteBe)
             {
                 BeMismoQueSmtCheck.IsChecked = true;
@@ -65,14 +64,12 @@ public sealed partial class AddModelDialog : ContentDialog
         NumeroParteBeBox.LostFocus += NumeroParte_LostFocus;
         NumeroParteTlaBox.LostFocus += NumeroParte_LostFocus;
 
-        // Al editar ya viene lleno; se habilita Guardar sin marcar errores
+        // Al editar ya viene lleno, se valida sin marcar errores
         _listo = true;
         Validar(mostrarErrores: false);
     }
 
-    // Si el número de parte que se acaba de escribir ya pertenece a otro
-    // registro (misma pieza, otra área) y el nombre sigue vacío, lo
-    // rellena solo — para no tener que volver a escribirlo igual.
+    // Si el número ya existe en otro registro y no hay nombre, lo llena
     private void NumeroParte_LostFocus(object sender, RoutedEventArgs e)
     {
         if (!string.IsNullOrWhiteSpace(NombreModeloBox.Text) || sender is not TextBox box || string.IsNullOrWhiteSpace(box.Text))
@@ -93,7 +90,7 @@ public sealed partial class AddModelDialog : ContentDialog
         }
     }
 
-    // --- "Es el mismo número que SMT" (BE) ---
+    // BE igual que SMT
 
     private void BeMismoQueSmtCheck_Checked(object sender, RoutedEventArgs e)
     {
@@ -110,7 +107,7 @@ public sealed partial class AddModelDialog : ContentDialog
 
     private void SincronizarBeConSmt(object sender, TextChangedEventArgs e) => NumeroParteBeBox.Text = NumeroParteSmtBox.Text;
 
-    // --- "Es el mismo número que SMT" (TLA) ---
+    // TLA igual que SMT
 
     private void TlaMismoQueSmtCheck_Checked(object sender, RoutedEventArgs e)
     {
@@ -137,8 +134,7 @@ public sealed partial class AddModelDialog : ContentDialog
         var parteTla = NumeroParteTlaBox.Text?.Trim() ?? string.Empty;
         var quienRecibe = QuienRecibeBox.SelectedItem as string ?? string.Empty;
 
-        // El "número de modelo" ya no se captura aparte: se toma el número de
-        // parte de mayor prioridad (SMT > BE > TLA) entre los que se llenaron.
+        // Número de modelo = número de parte con prioridad SMT > BE > TLA
         var numero = !string.IsNullOrWhiteSpace(parteSmt) ? parteSmt
             : !string.IsNullOrWhiteSpace(parteBe) ? parteBe
             : parteTla;
@@ -149,10 +145,7 @@ public sealed partial class AddModelDialog : ContentDialog
             return;
         }
 
-        // No se puede abrir un ContentDialog dentro de otro (WinUI3 solo
-        // permite uno a la vez) — en vez de un diálogo de confirmación
-        // aparte, se avisa con un InfoBar y se pide un segundo clic en
-        // "Guardar" para confirmar que sí se quiere de todos modos.
+        // No se pueden abrir dos ContentDialog, se avisa en un InfoBar y se confirma con otro clic
         var duplicado = EncontrarNumeroParteDuplicado(parteSmt, parteBe, parteTla);
         if (duplicado is not null && duplicado.Id != _duplicadoAvisadoParaId)
         {
@@ -177,8 +170,7 @@ public sealed partial class AddModelDialog : ContentDialog
         };
     }
 
-    // Busca si alguno de los 3 números de parte ya pertenece a OTRO
-    // registro — para avisar antes de crear un duplicado por accidente.
+    // Si algún número de parte ya es de otro registro
     private ModelRecord? EncontrarNumeroParteDuplicado(string parteSmt, string parteBe, string parteTla)
     {
         bool Coincide(ModelRecord r, string numero) =>
@@ -191,7 +183,7 @@ public sealed partial class AddModelDialog : ContentDialog
             r.Id != _editingId && (Coincide(r, parteSmt) || Coincide(r, parteBe) || Coincide(r, parteTla)));
     }
 
-    // --- Validación en vivo ---
+    // Validación en vivo
 
     private bool _listo;
     private readonly HashSet<string> _tocados = new();
@@ -212,7 +204,7 @@ public sealed partial class AddModelDialog : ContentDialog
         Validar(mostrarErrores: false);
     }
 
-    // Habilita Guardar y marca el error solo en los campos que ya se tocaron
+    // Habilita Guardar y marca errores en lo ya tocado
     private bool Validar(bool mostrarErrores)
     {
         if (!_listo)

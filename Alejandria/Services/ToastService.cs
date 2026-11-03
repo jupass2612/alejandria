@@ -1,7 +1,6 @@
 namespace Alejandria.Services;
 
-// Avisos cortos abajo de la ventana que se quitan solos.
-// MainWindow registra cómo mostrarlos; las páginas solo llaman Mostrar.
+// Avisos cortos abajo que se quitan solos; MainWindow los muestra
 public static class ToastService
 {
     public enum Tipo
