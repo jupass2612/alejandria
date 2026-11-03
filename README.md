@@ -237,6 +237,3 @@ Alejandria/
 ## Problemas conocidos
 
 - **Se queda cargando**: revisar VPN/red, la ruta compartida no responde.
-- **No copia `Alejandria.exe` al compilar**: la app está abierta.
-- **`'X' no existe en el contexto actual` en algo que sí existe**: revisar con `git status`
-  que ningún archivo se haya modificado por fuera (ya pasó con un rename de otro proyecto).
