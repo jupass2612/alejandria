@@ -14,7 +14,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <!-- Subirla en cada versión (ver Installer/LEEME-VELOPACK.md) -->
+    <!-- Subirla en cada versión (ver README, Publicar una versión nueva) -->
     <Version>1.22.0</Version>
     <!-- Sin MSIX, corre directo -->
     <WindowsPackageType>None</WindowsPackageType>
@@ -41,7 +41,7 @@
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <!-- SSH/SFTP hacia servidores Linux -->
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
-    <!-- Instalador y actualizaciones (ver Installer/LEEME-VELOPACK.md) -->
+    <!-- Instalador y actualizaciones (ver README) -->
     <PackageReference Include="Velopack" Version="0.0.1053" />
     <!-- Solo para empaquetar, no va en la app -->
     <PackageReference Include="Velopack.Build" Version="0.0.1369-g1d5c984">

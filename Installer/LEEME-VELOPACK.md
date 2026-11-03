@@ -1,95 +1,91 @@
-# Publicar una versión nueva de Alejandría (Velopack)
+# Empaquetar y publicar Alejandría con Velopack
 
-Alejandría se instala y se actualiza con [Velopack](https://velopack.io).
-Se instala por usuario en `%LocalAppData%\Alejandria`, sin admin ni UAC.
-Las actualizaciones salen de una carpeta de red, sin servidor ni internet.
-
-Todos los comandos se corren desde la raíz del repo (`C:\Users\solisj\alejandria`).
+Alejandría usa [Velopack](https://velopack.io) para instalarse y
+actualizarse sola — reemplaza el instalador de Inno Setup que se usaba
+antes. Velopack instala **por usuario** (en `%LocalAppData%\Alejandria`),
+así que ya no hace falta ser administrador ni aceptar un cuadro de UAC
+para instalar o actualizar.
 
 ## Qué versión ponerle
 
-`MAJOR.MINOR.PATCH`, por ejemplo `1.22.0`:
+`MAJOR.MINOR.PATCH` (ej. `1.1.1`):
 
-- **PATCH**: arreglos chicos (un bug, un texto, un detalle visual).
-- **MINOR**: algo nuevo o un cambio que se nota.
-- **MAJOR**: cambios grandes de fondo.
+- **PATCH** (último dígito): cambios chicos — arreglar un bug, ajustar un
+  texto, un detalle visual.
+- **MINOR** (segundo dígito): cambios medianos — una función nueva, un
+  cambio de comportamiento notorio.
+- **MAJOR** (primer dígito): cambios enormes — algo que cambia cómo
+  funciona la app de fondo (ej. la migración a Velopack).
 
-Lo que es solo de comentarios o README no sube versión.
+**Importante**: cada vez que subas la versión, agrega también una
+sección nueva arriba de `Alejandria/CHANGELOG.md` (formato
+`## X.Y.Z` seguido de una lista de los cambios) — de ahí sale tanto el
+botón "Ver notas de versión" en Ajustes como la ventana de "qué hay de
+nuevo" que aparece sola la primera vez que se abre una versión recién
+actualizada.
 
-## Una sola vez en la PC
+## Requisitos (en la máquina donde compilas)
 
-```powershell
-dotnet tool install -g vpk
-```
+1. Visual Studio 2022 con el proyecto compilando en Release.
+2. La herramienta de línea de comandos de Velopack:
 
-De preferencia con la misma versión que el paquete `Velopack` del `.csproj`:
+   ```powershell
+   dotnet tool install -g vpk
+   ```
 
-```powershell
-dotnet tool install -g vpk --version 0.0.1053
-```
+## Paso 1: Publicar la app
 
-## Pasos
-
-### 1. Subir la versión
-
-- En `Alejandria/Alejandria.csproj`, cambiar `<Version>`.
-- En `Alejandria/CHANGELOG.md`, agregar arriba una sección `## X.Y.Z` con la lista de cambios.
-  De ahí salen "Ver notas de versión" en Ajustes y el aviso de qué hay de nuevo.
-
-### 2. Commit y tag
-
-```powershell
-git add -A
-git commit -m "Alejandría X.Y.Z: <qué cambió>"
-git tag -a vX.Y.Z -m "Alejandría X.Y.Z"
-git push origin main --tags
-```
-
-### 3. Publicar
-
-Cerrar Alejandría antes (si está abierta no deja copiar el `.exe`).
+Igual que antes:
 
 ```powershell
 dotnet publish Alejandria\Alejandria.csproj -c Release -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o Installer\publish
 ```
 
-### 4. Empaquetar
+## Paso 2: Empaquetar con vpk
+
+Desde la carpeta raíz del repositorio:
 
 ```powershell
-vpk pack -u Alejandria -v X.Y.Z -p Installer\publish -e Alejandria.exe -o Installer\Releases
+vpk pack -u Alejandria -v 1.1.0 -p Installer\publish -e Alejandria.exe -o Installer\Releases
 ```
 
-- `-u Alejandria`: id de la app, **nunca cambiarlo** o Velopack la toma como otra app.
-- `-v X.Y.Z`: igual que `<Version>` del `.csproj`.
-- `-o Installer\Releases`: ahí queda todo. Conviene no borrar lo de versiones anteriores, Velopack lo usa para los paquetes delta.
+- `-u Alejandria`: el id único de la app — **no lo cambies entre
+  versiones**, es lo que permite que Velopack reconozca una actualización
+  en vez de tratarla como una app distinta.
+- `-v 1.1.0`: el número de versión — tiene que coincidir con `<Version>`
+  en `Alejandria.csproj` (súbelo ahí antes de este paso).
+- `-e Alejandria.exe`: el ejecutable principal.
+- `-o Installer\Releases`: carpeta donde queda todo lo generado.
 
-Queda algo así:
+Esto deja en `Installer\Releases\`:
 
-- `Alejandria-win-Setup.exe`: instalador para PCs nuevas.
-- `Alejandria-win-Portable.zip`: versión portable.
-- `Alejandria-X.Y.Z-full.nupkg`, `releases.win.json`, `RELEASES`, `assets.win.json`: lo que leen las instalaciones para actualizarse.
+- **`AlejandriaSetup.exe`**: el instalador para quien todavía no tiene la
+  app — se lo mandas a alguien nuevo, lo corre y ya.
+- Los archivos del "feed" de actualizaciones (`.nupkg`, metadatos) que
+  las instalaciones ya existentes van a leer solas con "Buscar
+  actualización".
 
-### 5. Subir a la carpeta de red
+## Paso 3: Publicar la actualización
 
-Copiar **todo** lo de `Installer\Releases\` a la carpeta de `Updates:Folder` en `appsettings.json`:
+Copia **todo el contenido** de `Installer\Releases\` a la carpeta de red
+configurada en `appsettings.json` (`Updates:Folder` — la misma unidad
+donde ya vive la base de datos), reemplazando lo que hubiera ahí antes.
 
-```
-\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones
-```
+Con eso, cualquier instalación existente que le dé "Buscar actualización"
+en Ajustes va a encontrar la versión nueva, descargarla, y (si el usuario
+confirma) instalarla y reiniciar sola.
 
-```powershell
-robocopy Installer\Releases "\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones" /E
-```
+## Primera instalación en una computadora nueva
 
-### 6. Probar
+Ahí sí se reparte `AlejandriaSetup.exe` directo (por USB, por la red, como
+sea) — se corre una vez, sin pedir permisos de administrador, y deja la
+app lista más el mecanismo de "Buscar actualización" ya conectado a la
+carpeta configurada en `appsettings.json`.
 
-En una PC que ya la tenga: Ajustes → **Buscar actualización**. Debe encontrar la versión nueva, instalarla y abrir sola.
+## Firma de código (opcional)
 
-## PC nueva
-
-Pasarle `Alejandria-win-Setup.exe` (de la carpeta de red o por USB) y correrlo una vez. No pide admin y ya queda conectada a la carpeta de actualizaciones.
-
-## Notas
-
-- `Installer\publish` y `Installer\Releases` no se suben a git (están en el `.gitignore`).
-- Sin firma de código, SmartScreen puede avisar la primera vez ("Windows protegió su PC"). Es normal en una app interna: **Más información → Ejecutar de todas formas**.
+Igual que antes: sin firmar, Windows SmartScreen puede avisar la primera
+vez ("Windows protegió su PC") — es normal para software interno. Si la
+empresa consigue un certificado de firma de código, `vpk pack` tiene
+opciones para firmar automáticamente; dímelo y lo agrego a este mismo
+paso a paso.
