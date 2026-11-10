@@ -35,7 +35,7 @@ public class ImesApiService
         _bearerToken = bearerToken;
     }
 
-    // Work orders del número de parte, uno por línea; filtrar con FiltrarPorArea
+    // Work orders del número de parte, uno por línea
     public async Task<List<ImesWorkOrder>> BuscarWorkOrdersAsync(string numeroDeParte)
     {
         if (string.IsNullOrWhiteSpace(numeroDeParte))
@@ -72,27 +72,6 @@ public class ImesApiService
 
     // Para forzar una consulta nueva
     public static void LimpiarCache() => CacheWorkOrders.Clear();
-
-    // Filtra por LINE (L5SMT, Backend_QRO_1), no por el nombre del WO
-    public static List<ImesWorkOrder> FiltrarPorArea(IEnumerable<ImesWorkOrder> workOrders, string area)
-    {
-        var patrones = area switch
-        {
-            "SMT" => new[] { "SMT" },
-            "BE" => new[] { "BACKEND", "BE" },
-            "TLA" => new[] { "TLA", "FINAL" },
-            _ => Array.Empty<string>()
-        };
-
-        if (patrones.Length == 0)
-        {
-            return new List<ImesWorkOrder>();
-        }
-
-        return workOrders
-            .Where(wo => patrones.Any(p => wo.Line.Contains(p, StringComparison.OrdinalIgnoreCase)))
-            .ToList();
-    }
 
     // Modelo del serial; null si iMES no lo reconoce
     public async Task<ImesModeloPorSerial?> ObtenerModeloPorSerialAsync(string serialNumber)

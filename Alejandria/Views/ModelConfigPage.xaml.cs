@@ -108,13 +108,45 @@ public sealed partial class ModelConfigPage : Page
             return;
         }
 
-        var candidatos = await ViewModel.BuscarEnImesAsync();
-        if (candidatos.Count > 0)
+        await ViewModel.BuscarEnImesAsync();
+        AplicarResultadosImes();
+    }
+
+    // Pasa a pantalla lo que encontró iMES (si hay varios WO se elige en el combo)
+    private void AplicarResultadosImes()
+    {
+        if (ViewModel.OpcionesWoPrincipal.Count == 0 && ViewModel.OpcionesWoBe.Count == 0)
         {
-            ViewModel.AplicarWorkOrdersImes(candidatos);
-            PopulateFieldsFromDetalle();
-            ToastService.Mostrar(ViewModel.SuccessMessage);
+            return;
         }
+
+        ViewModel.AplicarResultadosImes();
+        PopulateFieldsFromDetalle();
+        ToastService.Mostrar(ViewModel.SuccessMessage, ToastService.Tipo.Info);
+    }
+
+    private void WoPrincipalCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isPopulatingFields || WoPrincipalCombo.SelectedItem is not ImesWorkOrder wo)
+        {
+            return;
+        }
+
+        ViewModel.AplicarWoPrincipal(wo);
+        PopulateFieldsFromDetalle();
+        ReiniciarAutoguardado();
+    }
+
+    private void WoBeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isPopulatingFields || WoBeCombo.SelectedItem is not ImesWorkOrder wo)
+        {
+            return;
+        }
+
+        ViewModel.AplicarWoBe(wo);
+        PopulateFieldsFromDetalle();
+        ReiniciarAutoguardado();
     }
 
     // Pasa el detalle a los controles a mano para controlar los recálculos
@@ -133,6 +165,13 @@ public sealed partial class ModelConfigPage : Page
         RutaBox.Text = detalle.Ruta;
         FlujoBox.Text = detalle.Flujo;
         LineaBox.Text = detalle.Linea;
+        WorkOrderBeBox.Text = detalle.WorkOrderBe;
+        FlujoBeBox.Text = detalle.Flujo;
+        LineaBeBox.Text = detalle.LineaBe;
+
+        // Los combos marcan el WO que quedó, si viene de la lista
+        WoPrincipalCombo.SelectedItem = ViewModel.OpcionesWoPrincipal.FirstOrDefault(o => o.WorkOrder == detalle.WorkOrder && o.Line == detalle.Linea);
+        WoBeCombo.SelectedItem = ViewModel.OpcionesWoBe.FirstOrDefault(o => o.WorkOrder == detalle.WorkOrderBe && o.Line == detalle.LineaBe);
 
         EstadoDocumentoCombo.SelectedItem = NullIfEmpty(detalle.EstadoDocumento) ?? ConfigStatusHelper.DocumentoCorrecto;
         _isPopulatingFields = false;
@@ -236,6 +275,9 @@ public sealed partial class ModelConfigPage : Page
             case nameof(RutaBox): ViewModel.Detalle.Ruta = box.Text; break;
             case nameof(FlujoBox): ViewModel.Detalle.Flujo = box.Text; break;
             case nameof(LineaBox): ViewModel.Detalle.Linea = box.Text; break;
+            case nameof(WorkOrderBeBox): ViewModel.Detalle.WorkOrderBe = box.Text; break;
+            case nameof(FlujoBeBox): ViewModel.Detalle.Flujo = box.Text; break;
+            case nameof(LineaBeBox): ViewModel.Detalle.LineaBe = box.Text; break;
         }
 
         ViewModel.RecomputeStatuses();
@@ -338,21 +380,20 @@ public sealed partial class ModelConfigPage : Page
     // Si no encuentra, pregunta si reintentar o capturar a mano
     private async Task BuscarEnImesConReintentoAsync()
     {
-        var candidatos = await ViewModel.BuscarEnImesAsync();
+        var todoEncontrado = await ViewModel.BuscarEnImesAsync();
+        AplicarResultadosImes();
 
-        if (candidatos.Count > 0)
+        if (todoEncontrado)
         {
-            // Varias líneas comparten WO, se juntan todas
-            ViewModel.AplicarWorkOrdersImes(candidatos);
-            PopulateFieldsFromDetalle();
-            ToastService.Mostrar(ViewModel.SuccessMessage);
             return;
         }
 
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "No se encontró nada en iMES",
+            Title = ViewModel.OpcionesWoPrincipal.Count > 0 || ViewModel.OpcionesWoBe.Count > 0
+                ? "Falta un work order en iMES"
+                : "No se encontró nada en iMES",
             Content = ViewModel.ErrorMessage ?? "No se encontró ningún Work Order para este número de parte.",
             PrimaryButtonText = "Ingresar manual",
             SecondaryButtonText = "Volver a intentar",

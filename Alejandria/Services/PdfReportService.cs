@@ -122,11 +122,27 @@ public static class PdfReportService
                     ("MODELS_SERIALNUMBERSPECS", detalle.ImesModelsSerialNumberSpecs, true),
                     ("MODELS_SERIALNUMBERSPECS Packing", detalle.ImesModelsSerialNumberSpecsPacking, true));
 
-                WriteSection(gfx, fonts, "Configuración Plataforma iMES", y,
-                    ("Work Order", detalle.WorkOrder, false),
-                    ConfigStatusHelper.EsAreaSmt(area) ? ("Ruta", detalle.Ruta, false) : ("Flujo", detalle.Flujo, false),
-                    ("Línea", detalle.Linea, false),
-                    ("PartLineBomMaintenance", detalle.PartLineBomMaintenance, true));
+                // En SMT-BE va primero lo de SMT y luego lo de BE
+                var plataforma = ConfigStatusHelper.EsAreaSmtBe(area)
+                    ? new[]
+                    {
+                        ("Work Order SMT", detalle.WorkOrder, false),
+                        ("Ruta SMT", detalle.Ruta, false),
+                        ("Línea SMT", detalle.Linea, false),
+                        ("Work Order BE", detalle.WorkOrderBe, false),
+                        ("Flujo BE", detalle.Flujo, false),
+                        ("Línea BE", detalle.LineaBe, false),
+                        ("PartLineBomMaintenance", detalle.PartLineBomMaintenance, true)
+                    }
+                    : new[]
+                    {
+                        ("Work Order", detalle.WorkOrder, false),
+                        ConfigStatusHelper.EsAreaSmt(area) ? ("Ruta", detalle.Ruta, false) : ("Flujo", detalle.Flujo, false),
+                        ("Línea", detalle.Linea, false),
+                        ("PartLineBomMaintenance", detalle.PartLineBomMaintenance, true)
+                    };
+
+                WriteSection(gfx, fonts, "Configuración Plataforma iMES", y, plataforma);
 
                 DrawFooter(gfx, fonts, document.PageCount);
             }

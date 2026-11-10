@@ -24,11 +24,33 @@ public partial class ModelConfigViewModel : ObservableObject
     public bool EsAreaSmt => ConfigStatusHelper.EsAreaSmt(AreaSeleccionada);
     public bool EsAreaBeOTla => !EsAreaSmt;
 
+    // SMT-BE lleva un bloque de WO para SMT y otro para BE
+    public bool EsAreaSmtBe => ConfigStatusHelper.EsAreaSmtBe(AreaSeleccionada);
+
+    public string TituloWoPrincipal => EsAreaSmtBe
+        ? $"SMT · {Modelo.NumeroParteSmt}"
+        : $"{AreaSeleccionada} · {Modelo.GetNumeroParte(AreaSeleccionada)}";
+
+    public string TituloWoBe => $"BE · {Modelo.NumeroParteBe}";
+
     partial void OnAreaSeleccionadaChanged(string value)
     {
         OnPropertyChanged(nameof(EsAreaSmt));
         OnPropertyChanged(nameof(EsAreaBeOTla));
+        OnPropertyChanged(nameof(EsAreaSmtBe));
+        OnPropertyChanged(nameof(TituloWoPrincipal));
+        OnPropertyChanged(nameof(TituloWoBe));
     }
+
+    // Lo que regresó iMES por número de parte, sin importar la línea; si hay varios se elige uno
+    public ObservableCollection<ImesWorkOrder> OpcionesWoPrincipal { get; } = new();
+    public ObservableCollection<ImesWorkOrder> OpcionesWoBe { get; } = new();
+
+    [ObservableProperty]
+    private bool hayVariosWoPrincipal;
+
+    [ObservableProperty]
+    private bool hayVariosWoBe;
 
     // Work Order/Ruta/Línea solo se capturan a mano si eligen Ingresar manual.
     // Se bloquea otra vez al cambiar de área o al encontrar algo
@@ -356,6 +378,7 @@ public partial class ModelConfigViewModel : ObservableObject
             AreaSeleccionada = area;
             ModelIdTexto = Detalle.ImesModelId;
             PermiteCapturaManualPlataforma = false;
+            LimpiarOpcionesWo();
 
             RecomputeStatuses();
             PasoActual = PrimerPasoPendiente();
@@ -466,6 +489,12 @@ public partial class ModelConfigViewModel : ObservableObject
                 if (!ConfigStatusHelper.IsFilled(Detalle.Flujo)) faltantes.Add("Flujo");
             }
             if (!ConfigStatusHelper.IsFilled(Detalle.Linea)) faltantes.Add("Línea");
+            if (EsAreaSmtBe)
+            {
+                if (!ConfigStatusHelper.IsFilled(Detalle.WorkOrderBe)) faltantes.Add("Work Order BE");
+                if (!ConfigStatusHelper.IsFilled(Detalle.Flujo)) faltantes.Add("Flujo BE");
+                if (!ConfigStatusHelper.IsFilled(Detalle.LineaBe)) faltantes.Add("Línea BE");
+            }
             if (!ConfigStatusHelper.IsFilled(Detalle.PartLineBomMaintenance)) faltantes.Add("PartLineBomMaintenance");
             if (!Modelo.TieneDocumentoAdjunto) faltantes.Add("PDF adjunto (en Altas de Modelos)");
 
@@ -490,40 +519,54 @@ public partial class ModelConfigViewModel : ObservableObject
     // Palomita si está completo, aviso si falta algo
     public string ResumenFaltantesGlyph => CamposFaltantes.Count == 0 ? "\uE73E" : "\uE7BA";
 
-    // Work orders del número de parte, solo los del área (por LINE).
-    // Puede haber varios, uno por línea
-    public async Task<List<ImesWorkOrder>> BuscarEnImesAsync()
+    // Busca en iMES los WO por número de parte, sin filtrar por línea.
+    // En SMT-BE busca el de SMT y el de BE. Regresa false si alguno no trajo nada
+    public async Task<bool> BuscarEnImesAsync()
     {
         var numeroParte = Modelo.GetNumeroParte(AreaSeleccionada);
         if (string.IsNullOrWhiteSpace(numeroParte))
         {
             ErrorMessage = $"El área {AreaSeleccionada} no tiene número de parte capturado.";
-            return new List<ImesWorkOrder>();
+            return false;
         }
 
         IsBuscandoImes = true;
         ErrorMessage = null;
+        LimpiarOpcionesWo();
 
         try
         {
             var imes = new ImesApiService(_settings.ImesApiBaseUrl, _settings.ImesApiBearerToken);
-            var todos = await imes.BuscarWorkOrdersAsync(numeroParte);
-            var delArea = ImesApiService.FiltrarPorArea(todos, AreaSeleccionada);
+            var sinWo = new List<string>();
 
-            if (delArea.Count == 0)
+            CargarOpciones(OpcionesWoPrincipal, await imes.BuscarWorkOrdersAsync(numeroParte));
+            HayVariosWoPrincipal = OpcionesWoPrincipal.Count > 1;
+            if (OpcionesWoPrincipal.Count == 0) sinWo.Add(numeroParte);
+
+            if (EsAreaSmtBe)
             {
-                ErrorMessage = todos.Count == 0
-                    ? $"iMES no tiene ningún work order para el número de parte {numeroParte}. Verifica si el Work Order ya está activo en iMES."
-                    : $"iMES tiene work orders para {numeroParte}, pero ninguno en una línea de {AreaSeleccionada}. Verifica si el Work Order de esa área ya está activo en iMES.";
+                var numeroBe = Modelo.GetNumeroParteSecundario(AreaSeleccionada);
+                if (!string.IsNullOrWhiteSpace(numeroBe))
+                {
+                    CargarOpciones(OpcionesWoBe, await imes.BuscarWorkOrdersAsync(numeroBe));
+                }
+
+                HayVariosWoBe = OpcionesWoBe.Count > 1;
+                if (OpcionesWoBe.Count == 0) sinWo.Add(string.IsNullOrWhiteSpace(numeroBe) ? "BE (sin número de parte)" : numeroBe);
             }
 
-            return delArea;
+            if (sinWo.Count > 0)
+            {
+                ErrorMessage = $"iMES no tiene ningún work order para {string.Join(" ni para ", sinWo)}. Verifica si el Work Order ya está activo en iMES.";
+            }
+
+            return sinWo.Count == 0;
         }
         catch (Exception ex)
         {
             LogService.LogError("ModelConfigViewModel.BuscarEnImesAsync", ex);
             ErrorMessage = $"No se pudo consultar iMES: {LogService.Redactar(ex.Message)}";
-            return new List<ImesWorkOrder>();
+            return false;
         }
         finally
         {
@@ -531,10 +574,31 @@ public partial class ModelConfigViewModel : ObservableObject
         }
     }
 
-    // Pasa lo de iMES a pantalla sin guardar; las líneas se juntan separadas por coma
-    public void AplicarWorkOrdersImes(List<ImesWorkOrder> workOrders)
+    // Sin repetidos (mismo WO, línea y ruta)
+    private static void CargarOpciones(ObservableCollection<ImesWorkOrder> destino, IEnumerable<ImesWorkOrder> workOrders)
     {
-        if (workOrders.Count == 0)
+        destino.Clear();
+        foreach (var wo in workOrders
+                     .Where(w => !string.IsNullOrWhiteSpace(w.WorkOrder))
+                     .GroupBy(w => (w.WorkOrder.ToUpperInvariant(), w.Line.ToUpperInvariant(), w.RouteName.ToUpperInvariant()))
+                     .Select(g => g.First()))
+        {
+            destino.Add(wo);
+        }
+    }
+
+    private void LimpiarOpcionesWo()
+    {
+        OpcionesWoPrincipal.Clear();
+        OpcionesWoBe.Clear();
+        HayVariosWoPrincipal = false;
+        HayVariosWoBe = false;
+    }
+
+    // Si hay un solo WO se aplica directo; si hay varios se espera a que elijan
+    public void AplicarResultadosImes()
+    {
+        if (OpcionesWoPrincipal.Count == 0 && OpcionesWoBe.Count == 0)
         {
             return;
         }
@@ -542,47 +606,56 @@ public partial class ModelConfigViewModel : ObservableObject
         // Ya hay datos de iMES, se bloquea la captura manual
         PermiteCapturaManualPlataforma = false;
 
-        var lineas = workOrders
-            .Select(wo => wo.Line)
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        var avisos = new List<string>();
+        var etiquetaPrincipal = EsAreaSmtBe ? "SMT" : AreaSeleccionada;
 
-        var workOrdersDistintos = workOrders
-            .Select(wo => wo.WorkOrder)
-            .Where(w => !string.IsNullOrWhiteSpace(w))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        if (OpcionesWoPrincipal.Count == 1)
+        {
+            AplicarWoPrincipal(OpcionesWoPrincipal[0]);
+            avisos.Add($"{etiquetaPrincipal}: {Detalle.WorkOrder} ({Detalle.Linea})");
+        }
+        else if (OpcionesWoPrincipal.Count > 1)
+        {
+            avisos.Add($"{etiquetaPrincipal}: hay {OpcionesWoPrincipal.Count} work orders, elige uno");
+        }
 
-        var rutas = workOrders
-            .Select(wo => wo.RouteName)
-            .Where(r => !string.IsNullOrWhiteSpace(r))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        if (EsAreaSmtBe && OpcionesWoBe.Count == 1)
+        {
+            AplicarWoBe(OpcionesWoBe[0]);
+            avisos.Add($"BE: {Detalle.WorkOrderBe} ({Detalle.LineaBe})");
+        }
+        else if (EsAreaSmtBe && OpcionesWoBe.Count > 1)
+        {
+            avisos.Add($"BE: hay {OpcionesWoBe.Count} work orders, elige uno");
+        }
 
-        Detalle.WorkOrder = workOrdersDistintos.FirstOrDefault() ?? string.Empty;
+        SuccessMessage = $"iMES · {string.Join(" · ", avisos)}. Revisa y guarda para confirmarlo.";
+    }
 
-        // SMT lo guarda en Ruta, BE/TLA en Flujo
+    // WO de SMT, BE o TLA; SMT guarda la ruta en Ruta, BE/TLA en Flujo
+    public void AplicarWoPrincipal(ImesWorkOrder wo)
+    {
+        Detalle.WorkOrder = wo.WorkOrder;
         if (EsAreaSmt)
         {
-            Detalle.Ruta = rutas.FirstOrDefault() ?? string.Empty;
+            Detalle.Ruta = wo.RouteName;
         }
         else
         {
-            Detalle.Flujo = rutas.FirstOrDefault() ?? string.Empty;
+            Detalle.Flujo = wo.RouteName;
         }
 
-        Detalle.Linea = string.Join(", ", lineas);
+        Detalle.Linea = wo.Line;
         RecomputeStatuses();
+    }
 
-        // Si salen varios WO distintos se avisa, puede haber viejos activos
-        var aviso = workOrdersDistintos.Count > 1
-            ? $" Aviso: iMES tiene {workOrdersDistintos.Count} work orders distintos para estas líneas (se usó \"{Detalle.WorkOrder}\") — puede que haya work orders con el nombre anterior todavía activos; verifica que sea el correcto."
-            : string.Empty;
-
-        SuccessMessage = lineas.Count > 1
-            ? $"Se aplicó desde iMES — {lineas.Count} líneas encontradas ({Detalle.Linea}).{aviso} Revisa y guarda para confirmarlo."
-            : $"Se aplicó desde iMES ({Detalle.Linea}).{aviso} Revisa y guarda para confirmarlo.";
+    // Solo SMT-BE: el WO de BE, su ruta va en Flujo
+    public void AplicarWoBe(ImesWorkOrder wo)
+    {
+        Detalle.WorkOrderBe = wo.WorkOrder;
+        Detalle.Flujo = wo.RouteName;
+        Detalle.LineaBe = wo.Line;
+        RecomputeStatuses();
     }
 
     // Prueba el serial en iMES

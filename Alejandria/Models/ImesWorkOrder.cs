@@ -26,6 +26,9 @@ public class ImesWorkOrder
 
     [JsonPropertyName("WO_CREATE_DATE")]
     public string WoCreateDate { get; set; } = string.Empty;
+
+    // Lo que sale en el combo para elegir
+    public override string ToString() => $"{WorkOrder} · {Line} · {RouteName}";
 }
 
 // Respuesta de la API: success, code, msg, data

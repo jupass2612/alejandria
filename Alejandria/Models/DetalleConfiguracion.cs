@@ -28,6 +28,10 @@ public class DetalleConfiguracion
     public string Linea { get; set; } = string.Empty;
     public string PartLineBomMaintenance { get; set; } = string.Empty;
 
+    // Solo SMT-BE: el WO y la línea de BE (su ruta va en Flujo)
+    public string WorkOrderBe { get; set; } = string.Empty;
+    public string LineaBe { get; set; } = string.Empty;
+
     // Correcto o Pendiente a correcciones; si está pendiente, en Histórico se habilita Adjuntar PDF
     public string EstadoDocumento { get; set; } = "Correcto";
 
@@ -37,5 +41,6 @@ public class DetalleConfiguracion
     // Si tiene algo capturado
     public bool TieneDatos =>
         !string.IsNullOrWhiteSpace(ImesModelsParents) || !string.IsNullOrWhiteSpace(ImesModelsMaster) || !string.IsNullOrWhiteSpace(ImesModelsSerialNumberSpecs) || !string.IsNullOrWhiteSpace(ImesModelsSerialNumberSpecsPacking) ||
-        !string.IsNullOrWhiteSpace(WorkOrder) || !string.IsNullOrWhiteSpace(Flujo) || !string.IsNullOrWhiteSpace(Ruta) || !string.IsNullOrWhiteSpace(Linea) || !string.IsNullOrWhiteSpace(PartLineBomMaintenance);
+        !string.IsNullOrWhiteSpace(WorkOrder) || !string.IsNullOrWhiteSpace(Flujo) || !string.IsNullOrWhiteSpace(Ruta) || !string.IsNullOrWhiteSpace(Linea) || !string.IsNullOrWhiteSpace(PartLineBomMaintenance) ||
+        !string.IsNullOrWhiteSpace(WorkOrderBe) || !string.IsNullOrWhiteSpace(LineaBe);
 }

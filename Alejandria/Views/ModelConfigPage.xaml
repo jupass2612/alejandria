@@ -589,45 +589,88 @@
                     </Grid>
 
                     <TextBlock
-                        Text="Work Order, Ruta y Línea se llenan con &quot;Buscar en iMES&quot; — solo se pueden escribir a mano si esa búsqueda no encuentra nada (por ejemplo, si el Work Order todavía no está activo en iMES)."
+                        Text="Work Order, Ruta y Línea se llenan con &quot;Buscar en iMES&quot; por número de parte, sin importar la línea. Si iMES tiene varios, elige uno en la lista. En SMT-BE va uno para SMT y otro para BE. Solo se escriben a mano si la búsqueda no encuentra nada."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
 
                     <InfoBar
                         Title="Captura manual habilitada"
-                        Message="No se encontró nada en iMES para esta área — revisa el mensaje de arriba y, si el Work Order no está activo todavía, puedes capturar estos 3 campos a mano mientras tanto."
+                        Message="No se encontró nada en iMES para esta área — revisa el mensaje de arriba y, si el Work Order no está activo todavía, puedes capturar los campos a mano mientras tanto."
                         Severity="Warning"
                         IsOpen="{x:Bind ViewModel.PermiteCapturaManualPlataforma, Mode=OneWay}"
                         IsClosable="False" />
 
-                    <Grid ColumnSpacing="16" RowSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Spacing="6">
-                            <TextBlock Text="Work Order" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox x:Name="WorkOrderBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
-                        </StackPanel>
-                        <Grid Grid.Column="1">
-                            <!-- SMT ve Ruta, BE/TLA ven Flujo -->
-                            <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.EsAreaSmt, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Text="Ruta" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBox x:Name="RutaBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                    <!-- WO de SMT, BE o TLA (en SMT-BE es el de SMT) -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{x:Bind ViewModel.TituloWoPrincipal, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Name="WoPrincipalCombo"
+                            ItemsSource="{x:Bind ViewModel.OpcionesWoPrincipal}"
+                            PlaceholderText="iMES tiene varios work orders, elige uno"
+                            HorizontalAlignment="Stretch"
+                            MaxWidth="640"
+                            Visibility="{x:Bind ViewModel.HayVariosWoPrincipal, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                            SelectionChanged="WoPrincipalCombo_SelectionChanged" />
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Work Order" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="WorkOrderBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
                             </StackPanel>
-                            <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.EsAreaBeOTla, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Text="Flujo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBox x:Name="FlujoBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                            <Grid Grid.Column="1">
+                                <!-- SMT ve Ruta, BE/TLA ven Flujo -->
+                                <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.EsAreaSmt, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="Ruta" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBox x:Name="RutaBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                                </StackPanel>
+                                <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.EsAreaBeOTla, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="Flujo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBox x:Name="FlujoBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                                </StackPanel>
+                            </Grid>
+                            <StackPanel Grid.Column="2" Spacing="6">
+                                <TextBlock Text="Línea" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="LineaBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
                             </StackPanel>
                         </Grid>
-                        <StackPanel Grid.Column="2" Spacing="6">
-                            <TextBlock Text="Línea" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox x:Name="LineaBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
-                        </StackPanel>
-                    </Grid>
+                    </StackPanel>
+
+                    <!-- Solo SMT-BE: WO de BE, su ruta es el Flujo -->
+                    <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.EsAreaSmtBe, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="{x:Bind ViewModel.TituloWoBe, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Name="WoBeCombo"
+                            ItemsSource="{x:Bind ViewModel.OpcionesWoBe}"
+                            PlaceholderText="iMES tiene varios work orders, elige uno"
+                            HorizontalAlignment="Stretch"
+                            MaxWidth="640"
+                            Visibility="{x:Bind ViewModel.HayVariosWoBe, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                            SelectionChanged="WoBeCombo_SelectionChanged" />
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Work Order" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="WorkOrderBeBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Flujo" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="FlujoBeBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="6">
+                                <TextBlock Text="Línea" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="LineaBeBox" IsReadOnly="{x:Bind ViewModel.CamposPlataformaSoloLectura, Mode=OneWay}" PlaceholderText="Usa &quot;Buscar en iMES&quot; arriba" TextChanged="TextField_TextChanged" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
 
                     <StackPanel Spacing="6" MaxWidth="360" HorizontalAlignment="Left">
                         <TextBlock Text="PartLineBomMaintenance" Style="{ThemeResource BodyStrongTextBlockStyle}" />

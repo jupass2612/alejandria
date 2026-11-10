@@ -214,10 +214,12 @@ public static class ExcelExportService
                 sheet.Cell(row, 6).Value = detalle.ImesModelsMaster;
                 sheet.Cell(row, 7).Value = detalle.ImesModelsSerialNumberSpecs;
                 sheet.Cell(row, 8).Value = detalle.ImesModelsSerialNumberSpecsPacking;
-                sheet.Cell(row, 9).Value = detalle.WorkOrder;
+                // SMT-BE: "SMT / BE" en Work Order y Línea; el Flujo ya es el de BE
+                var esSmtBe = ConfigStatusHelper.EsAreaSmtBe(area);
+                sheet.Cell(row, 9).Value = esSmtBe ? $"{detalle.WorkOrder} / {detalle.WorkOrderBe}" : detalle.WorkOrder;
                 sheet.Cell(row, 10).Value = detalle.Flujo;
                 sheet.Cell(row, 11).Value = detalle.Ruta;
-                sheet.Cell(row, 12).Value = detalle.Linea;
+                sheet.Cell(row, 12).Value = esSmtBe ? $"{detalle.Linea} / {detalle.LineaBe}" : detalle.Linea;
                 sheet.Cell(row, 13).Value = detalle.PartLineBomMaintenance;
 
                 WriteStatusCell(sheet.Cell(row, 14), resumenArea.EstatusBd);

@@ -103,17 +103,33 @@ public static class ConfigStatusHelper
         string.Equals(area, "SMT", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(area, "SMT-BE", StringComparison.OrdinalIgnoreCase);
 
+    // SMT-BE lleva dos WO: el de SMT y el de BE
+    public static bool EsAreaSmtBe(string area) =>
+        string.Equals(area, "SMT-BE", StringComparison.OrdinalIgnoreCase);
+
     public static string AggregatePlataforma(DetalleConfiguracion detalle)
     {
         var estatusRutaOFlujo = EsAreaSmt(detalle.Area)
             ? (IsFilled(detalle.Ruta) ? Terminado : Pendiente)
             : (IsFilled(detalle.Flujo) ? Terminado : Pendiente);
 
-        return Aggregate(
+        var estatus = new List<string?>
+        {
             IsFilled(detalle.WorkOrder) ? Terminado : Pendiente,
             estatusRutaOFlujo,
             IsFilled(detalle.Linea) ? Terminado : Pendiente,
-            detalle.PartLineBomMaintenance);
+            detalle.PartLineBomMaintenance
+        };
+
+        // En SMT-BE también cuenta lo de BE
+        if (EsAreaSmtBe(detalle.Area))
+        {
+            estatus.Add(IsFilled(detalle.WorkOrderBe) ? Terminado : Pendiente);
+            estatus.Add(IsFilled(detalle.Flujo) ? Terminado : Pendiente);
+            estatus.Add(IsFilled(detalle.LineaBe) ? Terminado : Pendiente);
+        }
+
+        return Aggregate(estatus.ToArray());
     }
 
     // Campos que cuentan para el conteo por persona (Ruta/Flujo vienen de iMES, no cuentan)

@@ -105,7 +105,8 @@ Las preferencias son de cada PC: `%LOCALAPPDATA%\Alejandria\preferences.json`.
 Con la sesión de Windows (no pide contraseña). Si algún día dan un token, va en `ImesApi:BearerToken`.
 
 - **Buscar en iMES**: `GET /imes/getWorkOrderForNonLine?Ipn={número de parte}`.
-  El área sale del campo `LINE`, no del nombre del WO. Si hay varias líneas del área se juntan con coma.
+  Trae todos los work orders del número de parte sin importar la línea. Si hay varios
+  se elige uno en la lista; si hay uno se llena solo. En SMT-BE se busca el de SMT y el de BE.
   Work Order, Ruta y Línea son de solo lectura; si no encuentra nada se puede
   **Volver a intentar** o **Ingresar manual**.
 - **Probar en iMES**: `GET /imes/SMT/QRO/GetModelDataFromSn?serialNumber={serial}`.

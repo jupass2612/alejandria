@@ -9,8 +9,9 @@ obj/
 .idea/
 
 # Velopack
-Installer/Releases/
-Installer/publish/
+# Cualquier carpeta Releases o publish, esté donde esté
+Releases/
+publish/
 
 # Datos locales
 *.db

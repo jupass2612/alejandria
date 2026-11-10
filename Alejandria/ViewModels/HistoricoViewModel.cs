@@ -173,6 +173,8 @@ public partial class HistoricoViewModel : ObservableObject
                     Flujo = detalleOriginal.Flujo,
                     Ruta = detalleOriginal.Ruta,
                     Linea = detalleOriginal.Linea,
+                    WorkOrderBe = detalleOriginal.WorkOrderBe,
+                    LineaBe = detalleOriginal.LineaBe,
                     PartLineBomMaintenance = detalleOriginal.PartLineBomMaintenance,
                     ImesModelId = detalleOriginal.ImesModelId
                 });

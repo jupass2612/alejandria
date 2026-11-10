@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.23.0
+- Buscar en iMES ya no filtra por línea: trae todos los work orders del número de parte.
+- Si iMES tiene varios work orders, sale una lista para elegir uno (WO · línea · ruta); si hay uno solo se llena directo.
+- SMT-BE: el Paso 4 tiene un bloque para SMT (Work Order, Ruta, Línea) y otro para BE (Work Order, Flujo, Línea), cada uno con su número de parte.
+- El estatus de Plataforma en SMT-BE cuenta los dos work orders; el reporte PDF y el Excel ya muestran el de BE.
+
 ## 1.22.0
 - Configurar modelo: al completar un paso, a los 1.5 s pasa solo al siguiente. Se apaga en Ajustes → "Avanzar de paso automáticamente".
 - El MODELID se captura en el Paso 2 (MODELS_MASTER), se guarda por área y el Paso 3 ya lo trae para armar el INSERT.
