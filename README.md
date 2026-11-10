@@ -169,7 +169,21 @@ git tag -a vX.Y.Z -m "Alejandría X.Y.Z"
 git push origin main --tags
 ```
 
-### 3. Publicar
+### 3. Publicar con el script
+
+Doble clic a `Installer\publicar-version.cmd` (o correrlo desde cmd). Hace los pasos 4 a 6 solo:
+
+- Toma la versión del `.csproj` y revisa que el `CHANGELOG.md` traiga `## X.Y.Z`.
+- Revisa que `dotnet` y `vpk` estén instalados, que Alejandría esté cerrada y que haya red.
+- Baja lo que ya está publicado en la carpeta de red (para los delta).
+- `dotnet publish`, `vpk pack` y copia todo a la carpeta de actualizaciones.
+- Al final pregunta si crea el tag `vX.Y.Z` (si no existe) y lo sube a los remotos.
+
+Con `publicar-version.cmd /sincopiar` solo empaqueta y no toca la carpeta de red.
+
+Si algo falla se puede hacer a mano:
+
+### 4. Publicar a mano
 
 Con Alejandría cerrada (si está abierta no deja copiar el `.exe`):
 
@@ -177,7 +191,7 @@ Con Alejandría cerrada (si está abierta no deja copiar el `.exe`):
 dotnet publish Alejandria\Alejandria.csproj -c Release -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o Installer\publish
 ```
 
-### 4. Empaquetar
+### 5. Empaquetar
 
 ```powershell
 vpk pack -u Alejandria -v X.Y.Z -p Installer\publish -e Alejandria.exe -o Installer\Releases
@@ -191,7 +205,7 @@ Queda `Alejandria-win-Setup.exe` (instalador para PCs nuevas),
 `Alejandria-win-Portable.zip` y los archivos que leen las instalaciones
 para actualizarse (`.nupkg`, `releases.win.json`, `RELEASES`, `assets.win.json`).
 
-### 5. Subir a la carpeta de red
+### 6. Subir a la carpeta de red
 
 Copiar **todo** `Installer\Releases` a la carpeta de actualizaciones:
 
@@ -199,7 +213,7 @@ Copiar **todo** `Installer\Releases` a la carpeta de actualizaciones:
 robocopy Installer\Releases "\\sqromx-prfs01\Departments\IT\MES\Juan Pablo Solis\Alejandria\Actualizaciones" /E
 ```
 
-### 6. Probar
+### 7. Probar
 
 En una PC que ya la tenga: Ajustes → **Buscar actualización**.
 
