@@ -10,7 +10,10 @@ public static class ConfigStatusHelper
     public const string EnProceso = "En Proceso";
     public const string Terminado = "Terminado";
     public const string Bloqueado = "Bloqueado por Documento Malo";
-    public const string NoAplica = "No Aplica";
+    public const string YaExistente = "Ya existente";
+
+    // Así se guardaba antes de la 1.24
+    private const string NoAplicaAnterior = "No Aplica";
 
     // Estado del documento, aparte de los campos de BD
     public const string DocumentoCorrecto = "Correcto";
@@ -46,17 +49,21 @@ public static class ConfigStatusHelper
             ?? limpio;
     }
 
+    // "No Aplica" de antes ahora es "Ya existente"
+    public static string NormalizarEstatus(string? valor) =>
+        valor == NoAplicaAnterior ? YaExistente : valor ?? string.Empty;
+
     // Opciones de los campos de BD
     public static IReadOnlyList<string> BdStatusOptions { get; } =
-        new[] { Pendiente, EnProceso, NoAplica }.Concat(Responsables).ToArray();
+        new[] { Pendiente, EnProceso, YaExistente }.Concat(Responsables).ToArray();
 
     // Opciones de PartLineBomMaintenance
     public static IReadOnlyList<string> PlataformaStatusOptions { get; } =
-        new[] { Pendiente, EnProceso, NoAplica }.Concat(Responsables).ToArray();
+        new[] { Pendiente, EnProceso, YaExistente }.Concat(Responsables).ToArray();
 
     public static bool IsCompleted(string? value) =>
         !string.IsNullOrWhiteSpace(value) &&
-        (value == Terminado || value == NoAplica || Responsables.Contains(value));
+        (value == Terminado || value == YaExistente || value == NoAplicaAnterior || Responsables.Contains(value));
 
     public static bool IsBlocked(string? value) => value == Bloqueado;
 
@@ -152,7 +159,7 @@ public static class ConfigStatusHelper
     // Resumen de un área
     public static ModeloResumen ComputeResumen(ModelRecord modelo, DetalleConfiguracion detalle)
     {
-        var estatusBd = Aggregate(detalle.ImesModelsParents, detalle.ImesModelsMaster, detalle.ImesModelsSerialNumberSpecs, detalle.ImesModelsSerialNumberSpecsPacking);
+        var estatusBd = Aggregate(detalle.ImesModelsParents, detalle.ImesModelsMaster, detalle.ImesModelsSerialNumberSpecs);
         var estatusPlataforma = AggregatePlataforma(detalle);
         var estatusGeneral = Combine(estatusBd, estatusPlataforma);
 
@@ -217,7 +224,7 @@ public static class ConfigStatusHelper
         return new ModeloResumen(estatusBdConsolidado, estatusPlataformaConsolidado, estatusGeneralConsolidado, fechaLimite, diasRetraso);
     }
 
-    // Estatus de un campo: responsable o No Aplica = Terminado
+    // Estatus de un campo: responsable o Ya existente = Terminado
     public static string EstatusDeCampo(string? valor) =>
         IsCompleted(valor) ? Terminado
         : valor == EnProceso ? EnProceso
@@ -228,7 +235,7 @@ public static class ConfigStatusHelper
     {
         EstatusDeCampo(detalle.ImesModelsParents),
         EstatusDeCampo(detalle.ImesModelsMaster),
-        Combine(EstatusDeCampo(detalle.ImesModelsSerialNumberSpecs), EstatusDeCampo(detalle.ImesModelsSerialNumberSpecsPacking)),
+        EstatusDeCampo(detalle.ImesModelsSerialNumberSpecs),
         AggregatePlataforma(detalle)
     };
 

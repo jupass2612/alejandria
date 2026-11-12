@@ -10,7 +10,7 @@ public static class PdfReportService
     private const double PageWidthPt = 595; // A4 a 72pt por pulgada
     private const double PageHeightPt = 842;
     private const double MarginLeft = 40;
-    private const double LabelColumnWidth = 260; // Cabe MODELS_SERIALNUMBERSPECS Packing
+    private const double LabelColumnWidth = 260; // Cabe MODELS_SERIALNUMBERSPECS
     private const double LineHeight = 22;
     private const string AccentHex = StatusColorHelper.AccentHex;
 
@@ -119,8 +119,7 @@ public static class PdfReportService
                 y = WriteSection(gfx, fonts, "Configuración Base de Datos — iMES", y,
                     ("MODELS_PARENTS", detalle.ImesModelsParents, true),
                     ("MODELS_MASTER", detalle.ImesModelsMaster, true),
-                    ("MODELS_SERIALNUMBERSPECS", detalle.ImesModelsSerialNumberSpecs, true),
-                    ("MODELS_SERIALNUMBERSPECS Packing", detalle.ImesModelsSerialNumberSpecsPacking, true));
+                    ("MODELS_SERIALNUMBERSPECS", detalle.ImesModelsSerialNumberSpecs, true));
 
                 // En SMT-BE va primero lo de SMT y luego lo de BE
                 var plataforma = ConfigStatusHelper.EsAreaSmtBe(area)

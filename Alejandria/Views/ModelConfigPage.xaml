@@ -270,7 +270,7 @@
                     </Grid>
 
                     <TextBlock
-                        Text="Da de alta el modelo padre en iMES y marca quién lo hizo, o No Aplica si ya existía."
+                        Text="Da de alta el modelo padre en iMES y marca quién lo hizo, o Ya existente si ya estaba en iMES."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap" />
@@ -385,7 +385,7 @@
                                 x:Name="PlantillaSpecsCombo"
                                 ItemsSource="{x:Bind ViewModel.Plantillas}"
                                 DisplayMemberPath="Nombre"
-                                PlaceholderText="Tesla, GM..."
+                                PlaceholderText="GM SMT, GM, Tesla..."
                                 HorizontalAlignment="Stretch"
                                 SelectionChanged="PlantillaSpecsCombo_SelectionChanged" />
                         </StackPanel>
@@ -539,20 +539,10 @@
                     <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="¿Quién lo dio de alta?" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <Grid ColumnSpacing="16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Spacing="6">
-                                    <TextBlock Text="MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                    <ComboBox x:Name="SerialSpecsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="6">
-                                    <TextBlock Text="MODELS_SERIALNUMBERSPECS Packing" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                    <ComboBox x:Name="SerialSpecsPackingCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
-                                </StackPanel>
-                            </Grid>
+                            <StackPanel Spacing="6" MaxWidth="360" HorizontalAlignment="Left">
+                                <TextBlock Text="MODELS_SERIALNUMBERSPECS" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <ComboBox x:Name="SerialSpecsCombo" ItemsSource="{x:Bind ViewModel.BdStatusOptions}" HorizontalAlignment="Stretch" SelectionChanged="StatusField_SelectionChanged" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

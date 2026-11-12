@@ -478,7 +478,6 @@ public partial class ModelConfigViewModel : ObservableObject
             if (!ConfigStatusHelper.IsFilled(Detalle.ImesModelsParents)) faltantes.Add("MODELS_PARENTS");
             if (!ConfigStatusHelper.IsFilled(Detalle.ImesModelsMaster)) faltantes.Add("MODELS_MASTER");
             if (!ConfigStatusHelper.IsFilled(Detalle.ImesModelsSerialNumberSpecs)) faltantes.Add("MODELS_SERIALNUMBERSPECS");
-            if (!ConfigStatusHelper.IsFilled(Detalle.ImesModelsSerialNumberSpecsPacking)) faltantes.Add("MODELS_SERIALNUMBERSPECS Packing");
             if (!ConfigStatusHelper.IsFilled(Detalle.WorkOrder)) faltantes.Add("Work Order");
             if (EsAreaSmt)
             {

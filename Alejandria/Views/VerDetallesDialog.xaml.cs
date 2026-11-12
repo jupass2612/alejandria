@@ -60,17 +60,32 @@ public sealed partial class VerDetallesDialog : ContentDialog
         var contenido = new StackPanel { Spacing = 12 };
         contenido.Children.Add(encabezado);
 
-        contenido.Children.Add(ConstruirSeccion("Configuración Plataforma iMES",
-            ("Work Order", detalle.WorkOrder),
-            ConfigStatusHelper.EsAreaSmt(area) ? ("Ruta", detalle.Ruta) : ("Flujo", detalle.Flujo),
-            ("Línea", detalle.Linea),
-            ("PartLineBomMaintenance", detalle.PartLineBomMaintenance)));
+        // En SMT-BE va lo de SMT y lo de BE
+        var plataforma = ConfigStatusHelper.EsAreaSmtBe(area)
+            ? new[]
+            {
+                ("Work Order SMT", detalle.WorkOrder),
+                ("Ruta SMT", detalle.Ruta),
+                ("Línea SMT", detalle.Linea),
+                ("Work Order BE", detalle.WorkOrderBe),
+                ("Flujo BE", detalle.Flujo),
+                ("Línea BE", detalle.LineaBe),
+                ("PartLineBomMaintenance", detalle.PartLineBomMaintenance)
+            }
+            : new[]
+            {
+                ("Work Order", detalle.WorkOrder),
+                ConfigStatusHelper.EsAreaSmt(area) ? ("Ruta", detalle.Ruta) : ("Flujo", detalle.Flujo),
+                ("Línea", detalle.Linea),
+                ("PartLineBomMaintenance", detalle.PartLineBomMaintenance)
+            };
+
+        contenido.Children.Add(ConstruirSeccion("Configuración Plataforma iMES", plataforma));
 
         contenido.Children.Add(ConstruirSeccion("Configuración Base de Datos — iMES",
             ("MODELS_PARENTS", detalle.ImesModelsParents),
             ("MODELS_MASTER", detalle.ImesModelsMaster),
-            ("MODELS_SERIALNUMBERSPECS", detalle.ImesModelsSerialNumberSpecs),
-            ("MODELS_SERIALNUMBERSPECS Packing", detalle.ImesModelsSerialNumberSpecsPacking)));
+            ("MODELS_SERIALNUMBERSPECS", detalle.ImesModelsSerialNumberSpecs)));
 
         return new Border
         {

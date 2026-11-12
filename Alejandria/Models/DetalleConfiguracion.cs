@@ -1,7 +1,7 @@
 namespace Alejandria.Models;
 
 // Configuración de un área del modelo (SMT, BE o TLA).
-// Cada campo guarda un estatus, No Aplica o quién lo hizo
+// Cada campo guarda un estatus, Ya existente o quién lo hizo
 public class DetalleConfiguracion
 {
     public int ModeloId { get; set; }
@@ -13,6 +13,7 @@ public class DetalleConfiguracion
     public string ImesModelsParents { get; set; } = string.Empty;
     public string ImesModelsMaster { get; set; } = string.Empty;
     public string ImesModelsSerialNumberSpecs { get; set; } = string.Empty;
+    // Packing ya no se usa, se deja la columna por compatibilidad
     public string ImesModelsSerialNumberSpecsPacking { get; set; } = string.Empty;
 
     // Unity ya no se usa, se dejan las columnas por compatibilidad

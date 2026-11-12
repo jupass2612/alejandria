@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.24.0
+- La plantilla que se llamaba Tesla ahora es **GM SMT** (mismas posiciones).
+- Nueva plantilla **Tesla**: PartNumberIndicator, ClientPartNumber, Revision, Separator, UniqueId, BuildSiteCode, BuildDate, ProductIdentifier y SerialNumberIndicator, cortados por posición.
+- Quedan tres plantillas: GM SMT, GM y Tesla.
+- Se quita MODELS_SERIALNUMBERSPECS Packing (ya no se usa): sale de Configurar, de Ver detalles, de los reportes y ya no cuenta para el estatus.
+- "No Aplica" ahora se llama "Ya existente". Lo que ya estaba guardado como No Aplica se muestra como Ya existente.
+
 ## 1.23.0
 - Buscar en iMES ya no filtra por línea: trae todos los work orders del número de parte.
 - Si iMES tiene varios work orders, sale una lista para elegir uno (WO · línea · ruta); si hay uno solo se llena directo.

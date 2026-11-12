@@ -19,36 +19,54 @@ public class SerialSpecPlantilla
 
 public static class SerialSpecPlantillas
 {
-    public static IReadOnlyList<SerialSpecPlantilla> Todas { get; } = new[] { Tesla(), Gm() };
+    public static IReadOnlyList<SerialSpecPlantilla> Todas { get; } = new[] { GmSmt(), Gm(), Tesla() };
 
     // Escapa la comilla simple para SQL
     private static string Sql(string serial) => serial.Replace("'", "''");
 
-    // Tesla: posiciones fijas con SUBSTR
-    private static SerialSpecPlantilla Tesla()
-    {
-        // (descripción, inicio, longitud, dinámico, guarda valor)
-        var segmentos = new (string Desc, int Inicio, int Len, bool Dinamico, bool GuardaValor)[]
-        {
-            ("SMTPartNumber", 1, 13, false, true),
-            ("LineNumber", 23, 1, true, true),
-            ("JulianDate", 20, 3, true, false),
-            ("Year", 18, 2, true, false),
-            ("ParentNumber", 24, 3, true, false),
-            ("ChildNumber", 27, 2, true, false),
-            ("Queretaro Plant", 15, 3, false, true)
-        };
+    // (descripción, inicio, longitud, dinámico, guarda valor)
+    private record struct Segmento(string Desc, int Inicio, int Len, bool Dinamico, bool GuardaValor);
 
+    // GM SMT: posiciones fijas con SUBSTR
+    private static SerialSpecPlantilla GmSmt() => PosicionesFijas("GM SMT", new Segmento[]
+    {
+        new("SMTPartNumber", 1, 13, false, true),
+        new("LineNumber", 23, 1, true, true),
+        new("JulianDate", 20, 3, true, false),
+        new("Year", 18, 2, true, false),
+        new("ParentNumber", 24, 3, true, false),
+        new("ChildNumber", 27, 2, true, false),
+        new("Queretaro Plant", 15, 3, false, true)
+    });
+
+    // Tesla: posiciones fijas con SUBSTR
+    private static SerialSpecPlantilla Tesla() => PosicionesFijas("Tesla", new Segmento[]
+    {
+        new("PartNumberIndicator", 1, 1, false, true),
+        new("ClientPartNumber", 2, 10, false, true),
+        new("Revision", 13, 1, false, true),
+        new("Separator", 14, 1, true, true),
+        new("UniqueId", 25, 5, true, false),
+        new("BuildSiteCode", 16, 3, false, true),
+        new("BuildDate", 19, 5, true, false),
+        new("ProductIdentifier", 24, 1, true, true),
+        new("SerialNumberIndicator", 15, 1, false, true)
+    });
+
+    // Plantilla que corta el serial por posición; los que no guardan valor van en NULL
+    private static SerialSpecPlantilla PosicionesFijas(string nombre, Segmento[] segmentos)
+    {
         var largoMinimo = segmentos.Max(s => s.Inicio + s.Len - 1);
+        var anchoDesc = segmentos.Max(s => s.Desc.Length) + 3;
 
         return new SerialSpecPlantilla
         {
-            Nombre = "Tesla",
+            Nombre = nombre,
             Previsualizar = serial =>
             {
                 if (serial.Length < largoMinimo)
                 {
-                    return (new(), $"El serial trae {serial.Length} caracteres y la plantilla Tesla necesita al menos {largoMinimo}.");
+                    return (new(), $"El serial trae {serial.Length} caracteres y la plantilla {nombre} necesita al menos {largoMinimo}.");
                 }
 
                 var filas = segmentos.Select(s => new SpecPreviewFila
@@ -62,24 +80,29 @@ public static class SerialSpecPlantillas
 
                 return (filas, null);
             },
-            GenerarSql = (serial, modelId) => $"""
-                INSERT INTO IMES.MODELS_SERIALNUMBERSPECS
-                  (ID, MODELID, VALUEDESCRIPTION, STARTPOSITION, EXPECTEDCHARACTERLEN, ISDYNAMICVALUE, FIXEDCHARACTERVALUE)
-                WITH r AS (
-                  SELECT
-                    '{Sql(serial)}' AS sn,
-                    {modelId} AS modelid,
-                    (SELECT NVL(MAX(ID), 0) FROM IMES.MODELS_SERIALNUMBERSPECS) AS base_id
-                  FROM dual
-                )
-                SELECT base_id + 1, modelid, 'SMTPartNumber',    1, 13, 0, SUBSTR(sn, 1, 13)          FROM r UNION ALL
-                SELECT base_id + 2, modelid, 'LineNumber',      23,  1, 1, SUBSTR(sn, 23, 1)          FROM r UNION ALL
-                SELECT base_id + 3, modelid, 'JulianDate',      20,  3, 1, CAST(NULL AS VARCHAR2(50)) FROM r UNION ALL
-                SELECT base_id + 4, modelid, 'Year',            18,  2, 1, CAST(NULL AS VARCHAR2(50)) FROM r UNION ALL
-                SELECT base_id + 5, modelid, 'ParentNumber',    24,  3, 1, CAST(NULL AS VARCHAR2(50)) FROM r UNION ALL
-                SELECT base_id + 6, modelid, 'ChildNumber',     27,  2, 1, CAST(NULL AS VARCHAR2(50)) FROM r UNION ALL
-                SELECT base_id + 7, modelid, 'Queretaro Plant', 15,  3, 0, SUBSTR(sn, 15, 3)          FROM r;
-                """
+            GenerarSql = (serial, modelId) =>
+            {
+                // Un SELECT por segmento, unidos con UNION ALL
+                var selects = segmentos.Select((s, n) =>
+                {
+                    var valor = s.GuardaValor ? $"SUBSTR(sn, {s.Inicio}, {s.Len})" : "CAST(NULL AS VARCHAR2(50))";
+                    var desc = $"'{s.Desc}',".PadRight(anchoDesc);
+                    return $"SELECT base_id + {n + 1}, modelid, {desc} {s.Inicio,2}, {s.Len,2}, {(s.Dinamico ? 1 : 0)}, {valor} FROM r";
+                });
+
+                return $"""
+                    INSERT INTO IMES.MODELS_SERIALNUMBERSPECS
+                      (ID, MODELID, VALUEDESCRIPTION, STARTPOSITION, EXPECTEDCHARACTERLEN, ISDYNAMICVALUE, FIXEDCHARACTERVALUE)
+                    WITH r AS (
+                      SELECT
+                        '{Sql(serial)}' AS sn,
+                        {modelId} AS modelid,
+                        (SELECT NVL(MAX(ID), 0) FROM IMES.MODELS_SERIALNUMBERSPECS) AS base_id
+                      FROM dual
+                    )
+                    {string.Join(" UNION ALL\n", selects)};
+                    """;
+            }
         };
     }
 

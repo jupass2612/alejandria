@@ -16,11 +16,11 @@ solo se registra. Lo único que consulta es la API web de iMES.
    Se puede buscar por nombre o número de parte y filtrar por
    Pendientes · En proceso · Atrasados. La columna **Avance** tiene un punto por paso.
 3. **Configurar** (clic en la fila), por área y en 4 pasos:
-   1. **MODELS_PARENTS**: quién lo dio de alta (o No Aplica).
+   1. **MODELS_PARENTS**: quién lo dio de alta (o Ya existente).
    2. **MODELS_MASTER**: el **MODELID** que quedó y quién lo dio de alta.
    3. **MODELS_SERIALNUMBERSPECS**: serial de ejemplo (a mano o **Extraer del PDF**),
-      plantilla (Tesla o GM) y MODELID → tabla de cómo debe quedar y el **INSERT** para copiar.
-      Luego **Probar en iMES** y quién dio de alta SerialSpecs y Packing.
+      plantilla (GM SMT, GM o Tesla) y MODELID → tabla de cómo debe quedar y el **INSERT** para copiar.
+      Luego **Probar en iMES** y quién dio de alta SerialSpecs.
    4. **Plataforma iMES**: Work Order, Ruta/Flujo y Línea con **Buscar en iMES**, y PartLineBomMaintenance.
 
    Arriba está el área, el estado del documento, el plazo (5 días hábiles) y lo que falta.
@@ -118,7 +118,8 @@ Con la sesión de Windows (no pide contraseña). Si algún día dan un token, va
 
 Están en `Services/SerialSpecPlantillas.cs`. Cada una tiene la vista previa (en C#) y el INSERT.
 
-- **Tesla**: posiciones fijas con `SUBSTR` (mínimo 28 caracteres).
+- **GM SMT**: posiciones fijas con `SUBSTR` (mínimo 28 caracteres).
+- **Tesla**: posiciones fijas con `SUBSTR` (mínimo 29 caracteres).
 - **GM**: código 2D, se parte con la misma regex que en Oracle.
 
 El INSERT toma `MAX(ID)` y suma 1, 2, 3… por fila. **Siempre revisarlo antes de correrlo.**
@@ -232,7 +233,7 @@ Alejandria/
 ├── Services/
 │   ├── ModelDatabaseService.cs       SQLite (CRUD y migraciones)
 │   ├── ConfigStatusHelper.cs         Reglas de estatus y de los 4 pasos
-│   ├── SerialSpecPlantillas.cs       Plantillas Tesla / GM
+│   ├── SerialSpecPlantillas.cs       Plantillas GM SMT / GM / Tesla
 │   ├── ImesApiService.cs             API de iMES
 │   ├── PdfSerialExtractorService.cs  Seriales del PDF adjunto (PdfPig)
 │   ├── DocumentAttachmentService.cs  PDFs adjuntos

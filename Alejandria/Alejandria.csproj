@@ -15,7 +15,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <!-- Subirla en cada versión (ver README, Publicar una versión nueva) -->
-    <Version>1.23.0</Version>
+    <Version>1.24.0</Version>
     <!-- Sin MSIX, corre directo -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>

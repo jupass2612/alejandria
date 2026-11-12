@@ -158,7 +158,6 @@ public sealed partial class ModelConfigPage : Page
         ParentsCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsParents);
         MasterCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsMaster);
         SerialSpecsCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsSerialNumberSpecs);
-        SerialSpecsPackingCombo.SelectedItem = NullIfEmpty(detalle.ImesModelsSerialNumberSpecsPacking);
         PartLineCombo.SelectedItem = NullIfEmpty(detalle.PartLineBomMaintenance);
 
         WorkOrderBox.Text = detalle.WorkOrder;
@@ -193,7 +192,6 @@ public sealed partial class ModelConfigPage : Page
             case nameof(ParentsCombo): ViewModel.Detalle.ImesModelsParents = value; break;
             case nameof(MasterCombo): ViewModel.Detalle.ImesModelsMaster = value; break;
             case nameof(SerialSpecsCombo): ViewModel.Detalle.ImesModelsSerialNumberSpecs = value; break;
-            case nameof(SerialSpecsPackingCombo): ViewModel.Detalle.ImesModelsSerialNumberSpecsPacking = value; break;
             case nameof(PartLineCombo): ViewModel.Detalle.PartLineBomMaintenance = value; break;
             case nameof(EstadoDocumentoCombo): ViewModel.Detalle.EstadoDocumento = value; break;
         }
@@ -221,7 +219,7 @@ public sealed partial class ModelConfigPage : Page
         {
             nameof(ParentsCombo) => 1,
             nameof(MasterCombo) => 2,
-            nameof(SerialSpecsCombo) or nameof(SerialSpecsPackingCombo) => 3,
+            nameof(SerialSpecsCombo) => 3,
             _ => 0
         };
 

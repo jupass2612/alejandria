@@ -8,7 +8,7 @@ namespace Alejandria.Services;
 public static class ExcelExportService
 {
     private const int AltasColumnCount = 9;
-    private const int ModelosColumnCount = 19;
+    private const int ModelosColumnCount = 18;
 
     // alcanceDescripcion null = reporte general
     public static void Export(
@@ -179,7 +179,7 @@ public static class ExcelExportService
         string[] headers =
         {
             "Número de modelo", "Nombre de modelo", "Área", "Números de parte",
-            "MODELS_PARENTS (iMES)", "MODELS_MASTER (iMES)", "MODELS_SERIALNUMBERSPECS (iMES)", "MODELS_SERIALNUMBERSPECS Packing (iMES)",
+            "MODELS_PARENTS (iMES)", "MODELS_MASTER (iMES)", "MODELS_SERIALNUMBERSPECS (iMES)",
             "Work Order", "Flujo", "Ruta", "Línea", "PartLineBomMaintenance",
             "Estatus BD (área)", "Estatus Plataforma (área)", "Estatus General (área)",
             "Estatus General (modelo completo)", "Fecha límite", "Días de retraso"
@@ -213,25 +213,24 @@ public static class ExcelExportService
                 sheet.Cell(row, 5).Value = detalle.ImesModelsParents;
                 sheet.Cell(row, 6).Value = detalle.ImesModelsMaster;
                 sheet.Cell(row, 7).Value = detalle.ImesModelsSerialNumberSpecs;
-                sheet.Cell(row, 8).Value = detalle.ImesModelsSerialNumberSpecsPacking;
                 // SMT-BE: "SMT / BE" en Work Order y Línea; el Flujo ya es el de BE
                 var esSmtBe = ConfigStatusHelper.EsAreaSmtBe(area);
-                sheet.Cell(row, 9).Value = esSmtBe ? $"{detalle.WorkOrder} / {detalle.WorkOrderBe}" : detalle.WorkOrder;
-                sheet.Cell(row, 10).Value = detalle.Flujo;
-                sheet.Cell(row, 11).Value = detalle.Ruta;
-                sheet.Cell(row, 12).Value = esSmtBe ? $"{detalle.Linea} / {detalle.LineaBe}" : detalle.Linea;
-                sheet.Cell(row, 13).Value = detalle.PartLineBomMaintenance;
+                sheet.Cell(row, 8).Value = esSmtBe ? $"{detalle.WorkOrder} / {detalle.WorkOrderBe}" : detalle.WorkOrder;
+                sheet.Cell(row, 9).Value = detalle.Flujo;
+                sheet.Cell(row, 10).Value = detalle.Ruta;
+                sheet.Cell(row, 11).Value = esSmtBe ? $"{detalle.Linea} / {detalle.LineaBe}" : detalle.Linea;
+                sheet.Cell(row, 12).Value = detalle.PartLineBomMaintenance;
 
-                WriteStatusCell(sheet.Cell(row, 14), resumenArea.EstatusBd);
-                WriteStatusCell(sheet.Cell(row, 15), resumenArea.EstatusPlataforma);
-                WriteStatusCell(sheet.Cell(row, 16), resumenArea.EstatusGeneral);
-                WriteStatusCell(sheet.Cell(row, 17), modeloResumen.EstatusGeneral);
+                WriteStatusCell(sheet.Cell(row, 13), resumenArea.EstatusBd);
+                WriteStatusCell(sheet.Cell(row, 14), resumenArea.EstatusPlataforma);
+                WriteStatusCell(sheet.Cell(row, 15), resumenArea.EstatusGeneral);
+                WriteStatusCell(sheet.Cell(row, 16), modeloResumen.EstatusGeneral);
 
-                var fechaCell = sheet.Cell(row, 18);
+                var fechaCell = sheet.Cell(row, 17);
                 fechaCell.Value = modeloResumen.FechaLimite;
                 fechaCell.Style.DateFormat.Format = "dd/mm/yyyy";
 
-                var retrasoCell = sheet.Cell(row, 19);
+                var retrasoCell = sheet.Cell(row, 18);
                 retrasoCell.Value = modeloResumen.DiasRetraso;
                 if (modeloResumen.EstaAtrasado)
                 {
@@ -239,7 +238,7 @@ public static class ExcelExportService
                     retrasoCell.Style.Font.Bold = true;
                 }
 
-                StripeRow(sheet, row, ModelosColumnCount, rowIndexInTable, skipColumns: new[] { 14, 15, 16, 17 });
+                StripeRow(sheet, row, ModelosColumnCount, rowIndexInTable, skipColumns: new[] { 13, 14, 15, 16 });
                 row++;
                 rowIndexInTable++;
             }
